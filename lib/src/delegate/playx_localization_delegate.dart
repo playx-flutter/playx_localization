@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:playx_localization/playx_localization.dart';
 import 'package:playx_localization/src/controller/controller.dart';
+import 'package:playx_localization/src/extensions/locale_extensions.dart';
 
 import '../easy_localization/localization.dart';
 
@@ -15,9 +16,7 @@ class PlayxLocalizationDelegate extends LocalizationsDelegate<Localization> {
   // final bool useOnlyLangCode;
 
   PlayxLocalizationDelegate(
-      {this.localizationController, this.supportedLocales}) {
-    EasyLocalization.logger.debug('Init Localization Delegate');
-  }
+      {this.localizationController, this.supportedLocales});
 
   @override
   bool isSupported(Locale locale) =>
@@ -25,7 +24,6 @@ class PlayxLocalizationDelegate extends LocalizationsDelegate<Localization> {
 
   @override
   Future<Localization> load(Locale locale) async {
-    EasyLocalization.logger.debug('Load Localization Delegate');
     if (localizationController!.translations == null) {
       final xLocale = localizationController!.searchLocaleByLanguageCode(
           languageCode: locale.languageCode, countryCode: locale.countryCode);

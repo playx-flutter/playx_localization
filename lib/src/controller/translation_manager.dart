@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:playx_localization/playx_localization.dart';
+import 'package:playx_localization/src/controller/controller.dart';
 import 'package:playx_localization/src/easy_localization/translations.dart';
+import 'package:playx_localization/src/extensions/locale_extensions.dart';
 
 class TranslationManager {
   TranslationManager._();
@@ -44,12 +46,12 @@ class TranslationManager {
         );
       }
       return (translations: translations, fallbackTranslations: null);
-    } on FlutterError catch (e) {
+    } on FlutterError catch (e,s) {
       // onLoadError(e);
-      EasyLocalization.logger.error(e.message);
+      PlayxLocaleController.logger?.error('Error loading translations: ',error: e, stackTrace: s);
       return (translations: null, fallbackTranslations: null);
-    } catch (e) {
-      EasyLocalization.logger.error(e);
+    } catch (e,s) {
+      PlayxLocaleController.logger?.error('Error loading translations: ',error: e, stackTrace: s);
       // onLoadError(FlutterError(e.toString()));
       return (
         translations: null,
@@ -62,9 +64,9 @@ class TranslationManager {
       {required XLocale locale, required PlayxLocaleConfig config}) async {
     try {
       return await loadTranslationData(locale: locale, config: config);
-    } on FlutterError catch (e) {
+    } on FlutterError catch (e,s) {
       // Disregard asset not found FlutterError when attempting to load base language fallback
-      EasyLocalization.logger.error(e.message);
+      PlayxLocaleController.logger?.error('Error loading translations: ',error: e, stackTrace: s);
     }
     return null;
   }

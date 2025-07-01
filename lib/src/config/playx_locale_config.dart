@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
 
 import '../../playx_localization.dart';
+import '../easy_localization/asset_loader.dart';
 
 /// Locale config :
 /// used to configure out app locales by providing the app with the supported locales and localization settings.
@@ -52,8 +53,11 @@ class PlayxLocaleConfig {
   /// @Default value true
   final bool saveLocale;
 
-  /// Log missing keys in the console.
+  /// Log missing keys in the console when a key is not found in the current locale file in debug mode.
   final bool logMissingKeys;
+
+  /// Log locale changes in the console when the locale is changed.
+  final bool logLocaleChanges;
 
   /// Migrate preferences to async storage.
   final bool migratePrefsToAsync;
@@ -75,6 +79,7 @@ class PlayxLocaleConfig {
     this.assetLoader = const RootBundleAssetLoader(),
     this.saveLocale = true,
     this.logMissingKeys = false,
+    this.logLocaleChanges = true,
     this.migratePrefsToAsync = false,
     this.extraDelegates,
     this.customLocalizationDelegateBuilder,

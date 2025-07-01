@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:playx_localization/playx_localization.dart';
 import 'package:playx_localization/src/easy_localization/public.dart' as ez;
+import 'package:playx_localization/src/extensions/locale_extensions.dart';
 
 import '../easy_localization/localization.dart';
 import '../widgets/playx_inherited_localization.dart';

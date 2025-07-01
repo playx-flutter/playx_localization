@@ -21,7 +21,6 @@ dependencies:
     sdk: flutter
   playx_core: ^0.7.3
   intl: any
-  easy_localization: ^3.0.7+1
   shared_preferences_platform_interface: ^2.4.1
 
 
