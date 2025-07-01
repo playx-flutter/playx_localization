@@ -1,7 +1,5 @@
 import 'dart:ui';
 
-import 'package:intl/intl.dart';
-
 import '../../playx_localization.dart';
 
 /// Extension on [String] to help with localization and language-specific analysis.
@@ -34,17 +32,16 @@ extension LocalizationStringExtensions on String {
   bool get isArabic => _arabicRegExp.hasMatch(this);
 
   /// Returns `true` if the string contains **only Arabic** letters (and spaces).
-  bool get containsOnlyArabic => _onlyArabicRegExp.hasMatch(this.trim());
+  bool get containsOnlyArabic => _onlyArabicRegExp.hasMatch(trim());
 
   /// Returns `true` if the string contains **only English** letters (and spaces).
-  bool get containsOnlyEnglish => _onlyEnglishRegExp.hasMatch(this.trim());
+  bool get containsOnlyEnglish => _onlyEnglishRegExp.hasMatch(trim());
 
   /// Returns `true` if the string contains **any numeric** digits.
   bool get hasNumbers => _numberRegExp.hasMatch(this);
 
-
   /// A list of Arabic diacritics (tashkeel) used in the Arabic language.
-  static const List<String>      _diacritics = [
+  static const List<String> _diacritics = [
     '\u064B', // fathatan
     '\u064C', // dammatan
     '\u064D', // kasratan
@@ -91,7 +88,8 @@ extension LocalizationStringExtensions on String {
 
   /// Converts the string to localized digits based on the current locale.
   String toLocalizedDigits({String? locale, bool toArabic = true}) {
-    final formatLocale = locale ?? PlayxLocalization.currentLocale.toLanguageTag();
+    final formatLocale =
+        locale ?? PlayxLocalization.currentLocale.toLanguageTag();
     if (formatLocale.startsWith('ar') && toArabic) {
       return toArabicIndicDigits();
     }
@@ -110,7 +108,6 @@ extension LocalizationStringExtensions on String {
     return trim().replaceAll(RegExp(r'\s+'), ' ');
   }
 
-
   /// Convert string to [Locale] object
   Locale toLocale({String separator = '_'}) {
     final localeList = split(separator);
@@ -118,9 +115,9 @@ extension LocalizationStringExtensions on String {
       case 2:
         return localeList.last.length == 4 // scriptCode length is 4
             ? Locale.fromSubtags(
-          languageCode: localeList.first,
-          scriptCode: localeList.last,
-        )
+                languageCode: localeList.first,
+                scriptCode: localeList.last,
+              )
             : Locale(localeList.first, localeList.last);
       case 3:
         return Locale.fromSubtags(
@@ -132,5 +129,4 @@ extension LocalizationStringExtensions on String {
         return Locale(localeList.first);
     }
   }
-
 }

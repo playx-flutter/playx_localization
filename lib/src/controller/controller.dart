@@ -4,7 +4,6 @@ import 'package:intl/intl_standalone.dart';
 import 'package:playx_localization/playx_localization.dart';
 import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
 import 'package:playx_localization/src/easy_localization/translations.dart';
-import 'package:playx_localization/src/extensions/locale_extensions.dart';
 
 import '../easy_localization/localization.dart';
 import 'translation_manager.dart';
@@ -47,7 +46,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   // Returns the device locale.
   Locale? deviceLocale;
 
-  static PlayxBaseLogger? get logger => PlayxLogger.getLogger('Playx Localization');
+  static PlayxBaseLogger? get logger =>
+      PlayxLogger.getLogger('Playx Localization');
 
   /// current locale index
   int get currentIndex {
@@ -77,7 +77,6 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     );
 
     final locale = _getStartLocale(savedLocale: lastSavedLocale);
-
 
     //Load translations from assets
     await loadTranslations(locale);
@@ -196,7 +195,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   /// if [forceAppUpdate] is true it will force the app to update.
   Future<void> nextLocale({bool forceAppUpdate = false}) async {
     final isLastLocale = currentIndex == config.supportedLocales.length - 1;
-    final index= isLastLocale? 0 : currentIndex + 1;
+    final index = isLastLocale ? 0 : currentIndex + 1;
 
     await updateByIndex(
       index,
@@ -211,7 +210,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     final locale = config.supportedLocales.atOrNull(index);
     if (locale == null) {
       if (config.logLocaleChanges) {
-        logger?.error('Locale with index $index not found in supported Locales');
+        logger
+            ?.error('Locale with index $index not found in supported Locales');
       }
       return false;
     }

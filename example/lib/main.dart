@@ -43,7 +43,8 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('Current Locale: ${PlayxLocalization.currentLocale} context :${context.locale.toStringWithSeparator()}');
+    print(
+        'Current Locale: ${PlayxLocalization.currentLocale} context :${context.locale.toStringWithSeparator()}');
     return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -60,10 +61,10 @@ class MyHomePage extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 18,
                       color:
-                      ('${context.tr(AppTrans.changeLanguageTitle)} : بلاي')
-                          .isArabic
-                          ? Colors.blueAccent
-                          : Colors.black),
+                          ('${context.tr(AppTrans.changeLanguageTitle)} : بلاي')
+                                  .isArabic
+                              ? Colors.blueAccent
+                              : Colors.black),
                 ),
                 const SizedBox(
                   height: 20,
@@ -73,7 +74,7 @@ class MyHomePage extends StatelessWidget {
                       showDialog(
                           context: context,
                           builder: (ctx) => Center(
-                              child: Card(
+                                  child: Card(
                                 margin: const EdgeInsets.all(8),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -85,23 +86,22 @@ class MyHomePage extends StatelessWidget {
                                     ),
                                     ...PlayxLocalization.supportedXLocales
                                         .map((e) => ListTile(
-                                      onTap: () {
-                                        PlayxLocalization.updateById(
-                                            e.id,
-                                            forceAppUpdate: false);
-                                        Navigator.pop(ctx);
-                                      },
-                                      title: Text(e.name),
-                                      trailing: PlayxLocalization
-                                          .currentXLocale.id ==
-                                          e.id
-                                          ? const Icon(
-                                        Icons.done,
-                                        color: Colors.lightBlue,
-                                      )
-                                          : const SizedBox.shrink(),
-                                    ))
-                                        ,
+                                              onTap: () {
+                                                PlayxLocalization.updateById(
+                                                    e.id,
+                                                    forceAppUpdate: false);
+                                                Navigator.pop(ctx);
+                                              },
+                                              title: Text(e.name),
+                                              trailing: PlayxLocalization
+                                                          .currentXLocale.id ==
+                                                      e.id
+                                                  ? const Icon(
+                                                      Icons.done,
+                                                      color: Colors.lightBlue,
+                                                    )
+                                                  : const SizedBox.shrink(),
+                                            )),
                                   ],
                                 ),
                               )));

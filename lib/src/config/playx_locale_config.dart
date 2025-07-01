@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
 
 import '../../playx_localization.dart';
-import '../easy_localization/asset_loader.dart';
 
 /// Locale config :
 /// used to configure out app locales by providing the app with the supported locales and localization settings.
@@ -67,7 +66,8 @@ class PlayxLocaleConfig {
 
   /// Custom localization delegate builder.
   /// This allows you to create a custom list of delegates based on the provided [PlayxLocalizationDelegate].
-  final List<LocalizationsDelegate> Function(PlayxLocalizationDelegate delegate)? customLocalizationDelegateBuilder;
+  final List<LocalizationsDelegate> Function(
+      PlayxLocalizationDelegate delegate)? customLocalizationDelegateBuilder;
 
   PlayxLocaleConfig({
     required this.supportedLocales,

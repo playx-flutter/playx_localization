@@ -16,8 +16,6 @@ abstract class PlayxLocalization {
   static PlayxLocaleController get _controller =>
       PlayxLocaleController.controller;
 
-
-
   ///Setup the current app locales with your configuration.
   ///And loads app supported translations.
   /// Must be called before calling any other method to initialize dependencies.

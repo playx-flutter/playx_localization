@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:playx_localization/playx_localization.dart';
 import 'package:playx_localization/src/easy_localization/public.dart' as ez;
-import 'package:playx_localization/src/extensions/locale_extensions.dart';
 
 import '../easy_localization/localization.dart';
-import '../widgets/playx_inherited_localization.dart';
 
 /// Strings extension method for access to [tr] and [plural()]
 /// Example :
@@ -208,7 +205,6 @@ extension BuildContextLocalizationExtension on BuildContext {
     );
   }
 
-
   /// Returns the current `XLocale` object with locale and font info.
   XLocale get currentXLocale {
     final locale = PlayxInheritedLocalization.of(this);
@@ -238,5 +234,4 @@ extension BuildContextLocalizationExtension on BuildContext {
 
   /// Returns true if the current locale is LTR.
   bool get isLtr => !isRtl;
-
 }

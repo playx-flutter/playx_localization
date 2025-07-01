@@ -37,13 +37,10 @@ extension LocaleExtension on Locale {
   }
 }
 
-
 extension XLocaleExtension on XLocale {
   Locale get locale => Locale(languageCode, countryCode);
 
   String toStringWithSeparator({String separator = '-'}) {
     return locale.toStringWithSeparator(separator: separator);
   }
-
-
 }
