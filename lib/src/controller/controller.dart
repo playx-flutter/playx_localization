@@ -76,12 +76,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
       lastKnownIndex ?? -1,
     );
 
-    logger.i(
-        'Last Saved Locale ${lastSavedLocale?.locale.toStringWithSeparator()}');
-
     final locale = _getStartLocale(savedLocale: lastSavedLocale);
 
-    logger.i('Start Locale ${locale.locale.toStringWithSeparator()}');
 
     //Load translations from assets
     await loadTranslations(locale);
@@ -94,7 +90,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     value = locale;
 
     logger.i(
-        'Translation booted with ${locale.locale.toStringWithSeparator()} with index $currentIndex');
+        'Translation booted with locale ${locale.name} -> ${locale.toStringWithSeparator()} at index ${supportedXLocales.indexOf(locale)}');
   }
 
   /// Retrieves the last saved theme index from preferences.

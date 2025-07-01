@@ -28,7 +28,10 @@ class PlayxLocalizationBuilder extends StatelessWidget {
         }
         return PlayxInheritedLocalization(
           locale: xLocale,
-          child: builder(context, xLocale),
+          child: Localizations(
+              locale: xLocale.locale,
+              delegates: controller.delegates,
+              child: builder(context, xLocale)),
         );
       },
     );
