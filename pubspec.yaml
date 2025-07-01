@@ -20,7 +20,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   playx_core: ^0.7.3
-  intl: any
+  intl:  ^0.20.2
   shared_preferences_platform_interface: ^2.4.1
 
 
