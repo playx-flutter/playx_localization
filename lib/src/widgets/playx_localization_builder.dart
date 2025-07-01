@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:playx_localization/playx_localization.dart';
 import 'package:playx_localization/src/controller/controller.dart';
-import 'package:playx_localization/src/widgets/playx_inherited_localization.dart';
 
 /// PlayxLocalizationBuilder:
 /// It allows us to create a widget with current locale.
@@ -28,7 +27,10 @@ class PlayxLocalizationBuilder extends StatelessWidget {
         }
         return PlayxInheritedLocalization(
           locale: xLocale,
-          child: builder(context, xLocale),
+          child: Localizations(
+              locale: xLocale.locale,
+              delegates: controller.delegates,
+              child: builder(context, xLocale)),
         );
       },
     );

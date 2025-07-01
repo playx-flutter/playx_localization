@@ -46,6 +46,9 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   // Returns the device locale.
   Locale? deviceLocale;
 
+  static PlayxBaseLogger? get logger =>
+      PlayxLogger.getLogger('Playx Localization');
+
   /// current locale index
   int get currentIndex {
     if (value == null) {
@@ -57,32 +60,27 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
 
   /// set up the base controller to load locales.
   Future<void> boot() async {
-    EasyLocalization.logger('Booting Localization');
-
+    final logger = PlayxLogger.initLogger(
+        name: 'Playx Localization',
+        setAsDefault: false,
+        useColoredFormatter: true);
     _localizationControllerInstance = this;
     final lastKnownIndex = await getLastSavedIndexFromPrefs(
         migratePrefsToAsync: config.migratePrefsToAsync);
 
     final foundPlatformLocale = await findSystemLocale();
     deviceLocale = foundPlatformLocale.toLocale();
-    EasyLocalization.logger(
-        'Device Locale ${deviceLocale?.toStringWithSeparator()}');
+    logger.i('Device Locale ${deviceLocale?.toStringWithSeparator()}');
 
     XLocale? lastSavedLocale = config.supportedLocales.atOrNull(
       lastKnownIndex ?? -1,
     );
 
-    EasyLocalization.logger(
-        'Last Saved Locale ${lastSavedLocale?.locale.toStringWithSeparator()}');
-
     final locale = _getStartLocale(savedLocale: lastSavedLocale);
-
-    EasyLocalization.logger(
-        'Start Locale ${locale.locale.toStringWithSeparator()}');
 
     //Load translations from assets
     await loadTranslations(locale);
-    EasyLocalization.logger('Loaded Translation from assets');
+    logger.i('Loaded Translation from assets');
 
     delegate = PlayxLocalizationDelegate(
       localizationController: this,
@@ -90,8 +88,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     );
     value = locale;
 
-    EasyLocalization.logger(
-        'translation booted with ${locale.locale.toStringWithSeparator()}✔');
+    logger.i(
+        'Translation booted with locale ${locale.name} -> ${locale.toStringWithSeparator()} at index ${supportedXLocales.indexOf(locale)}');
   }
 
   /// Retrieves the last saved theme index from preferences.
@@ -109,7 +107,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
       final lastKnownIndexInPrefs = PlayxPrefs.maybeGetInt(
         _lastKnownIndexKey,
       );
-      EasyLocalization.logger(
+      logger?.i(
           'Migrating preferences to SharedPreferenceAsync found index $lastKnownIndexInPrefs');
 
       if (lastKnownIndexInPrefs != null) {
@@ -149,7 +147,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     return getFallbackLocale();
   }
 
-  ///Get fallback Locale
+  /// Get fallback Locale
   /// if fallbackLocale is not null then return it
   /// if fallbackLocale is null then return english locale if it's supported in the config supported locales.
   /// if english locale is not supported then return the first locale in the config supported locales.
@@ -180,7 +178,12 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   /// if [forceAppUpdate] is true it will force the app to update.
   Future<bool> updateTo(XLocale locale, {bool forceAppUpdate = false}) async {
     final index = supportedXLocales.indexOf(locale);
-    if (index < 0) return false;
+    if (index < 0) {
+      if (config.logLocaleChanges) {
+        logger?.error('Locale not found in supported Locales');
+      }
+      return false;
+    }
     return _updateLocale(
       locale: locale,
       forceAppUpdate: forceAppUpdate,
@@ -192,9 +195,10 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   /// if [forceAppUpdate] is true it will force the app to update.
   Future<void> nextLocale({bool forceAppUpdate = false}) async {
     final isLastLocale = currentIndex == config.supportedLocales.length - 1;
+    final index = isLastLocale ? 0 : currentIndex + 1;
 
     await updateByIndex(
-      isLastLocale ? 0 : currentIndex + 1,
+      index,
       forceAppUpdate: forceAppUpdate,
     );
   }
@@ -204,7 +208,13 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   /// if [forceAppUpdate] is true it will force the app to update.
   Future<bool> updateByIndex(int index, {bool forceAppUpdate = false}) async {
     final locale = config.supportedLocales.atOrNull(index);
-    if (locale == null) return false;
+    if (locale == null) {
+      if (config.logLocaleChanges) {
+        logger
+            ?.error('Locale with index $index not found in supported Locales');
+      }
+      return false;
+    }
     return _updateLocale(locale: locale, forceAppUpdate: forceAppUpdate);
   }
 
@@ -213,7 +223,12 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   Future<bool> updateById(String id, {bool forceAppUpdate = false}) async {
     final locale =
         config.supportedLocales.firstWhereOrNull((element) => element.id == id);
-    if (locale == null) return false;
+    if (locale == null) {
+      if (config.logLocaleChanges) {
+        logger?.error('Locale with id $id not found in supported Locales');
+      }
+      return false;
+    }
     return _updateLocale(locale: locale, forceAppUpdate: forceAppUpdate);
   }
 
@@ -273,7 +288,9 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     try {
       final index = supportedXLocales.indexOf(locale);
       if (index < 0) {
-        EasyLocalization.logger.error('Locale not found in supported Locales');
+        if (config.logLocaleChanges) {
+          logger?.error('Locale not found in supported Locales');
+        }
         return false;
       }
 
@@ -283,18 +300,22 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
       if (config.saveLocale) {
         await PlayxAsyncPrefs.setInt(_lastKnownIndexKey, index);
       }
-
+      final oldLocale = value;
       value = locale;
 
       if (forceAppUpdate) {
         await _forceAppUpdate();
       }
 
-      EasyLocalization.logger(
-          'Updated locale to ${locale.name} with code ${locale.locale.toStringWithSeparator()}');
+      if (config.logLocaleChanges) {
+        logger?.i(
+            'Updated locale to ${locale.name} with code ${locale.locale.toStringWithSeparator()} at index $index from ${oldLocale?.locale.toStringWithSeparator()}');
+      }
       return true;
     } catch (e) {
-      EasyLocalization.logger.error(e);
+      if (config.logLocaleChanges) {
+        logger?.error(e);
+      }
       return false;
     }
   }
@@ -355,8 +376,11 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   }
 
   //delegates to be used in material app.
-  List<LocalizationsDelegate> get delegates => [
+  List<LocalizationsDelegate> get delegates =>
+      config.customLocalizationDelegateBuilder?.call(delegate) ??
+      [
         delegate,
+        ...?config.extraDelegates,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

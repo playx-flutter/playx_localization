@@ -204,4 +204,34 @@ extension BuildContextLocalizationExtension on BuildContext {
       format: format,
     );
   }
+
+  /// Returns the current `XLocale` object with locale and font info.
+  XLocale get currentXLocale {
+    final locale = PlayxInheritedLocalization.of(this);
+    return locale.locale;
+  }
+
+  /// Returns the current [Locale] used in the app.
+  Locale get currentLocale => currentXLocale.locale;
+
+  /// Returns the locale as a BCP-47 language tag (e.g., `en-US`, `ar-EG`).
+  String get localeTag => currentLocale.toLanguageTag();
+
+  /// Returns the current locale's language code (e.g., 'en', 'ar').
+  String get currentLanguageCode => currentLocale.languageCode;
+
+  /// Returns the font family for the current locale, if provided.
+  String? get fontFamily => currentXLocale.fontFamily;
+
+  /// Returns true if the current locale is Arabic.
+  bool get isCurrentLocaleArabic => currentLanguageCode == 'ar';
+
+  /// Returns true if the current locale is English.
+  bool get isCurrentLocaleEnglish => currentLanguageCode == 'en';
+
+  /// Returns true if the current locale is RTL (e.g., Arabic, Hebrew).
+  bool get isRtl => Bidi.hasAnyRtl(currentLanguageCode);
+
+  /// Returns true if the current locale is LTR.
+  bool get isLtr => !isRtl;
 }

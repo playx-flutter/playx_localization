@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:playx_core/playx_core.dart';
 
 ///Defines locales with more information like id and name.
@@ -18,8 +17,6 @@ class XLocale extends Equatable {
     this.countryCode,
     this.fontFamily,
   });
-
-  Locale get locale => Locale(languageCode, countryCode);
 
   @override
   List<Object?> get props => [id, name, languageCode, countryCode, fontFamily];

@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.3.0
+
+### Enhancements
+
+* **Improved Delegate Configuration**:
+
+    * Added `extraDelegates` to inject custom localization delegates.
+    * Added `customLocalizationDelegateBuilder` to fully customize the delegate list.
+* **Logging Enhancements**:
+
+    * Added `logLocaleChanges` toggle in `PlayxLocaleConfig`.
+    * Improved logs to show locale name, value, and index.
+
+* Removed `easy_localization` dependency; replaced with a custom, flexible system.
+
+### New Extensions
+
+####  `BuildContext` Locale Helpers
+
+* Easily access locale info like `currentLocale`, `localeTag`, `languageCode`, `isRtl`, `fontFamily`, and more.
+
+#### Number Extensions
+
+* Enhanced currency formatting with `toFormattedCurrencyNumber` and `toLocalizedCurrencyNumber`.
+* Added format options to all localized number methods.
+* New `isZero` utility for floating-point comparisons.
+
+#### String Localization Extensions
+
+* Check for RTL/LTR, Arabic/English text, numbers, and diacritics.
+* Convert digits between Arabic and Western formats.
+* Normalize Arabic letters and clean up extra spaces.
+
+#### Locale Utilities
+
+* New extensions for `Locale`, `XLocale`, and `String` for parsing and formatting.
+
+
 ## 0.2.2
 - Update packages.
 

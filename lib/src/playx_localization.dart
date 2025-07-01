@@ -1,6 +1,6 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:playx_localization/src/controller/controller.dart';
+import 'package:playx_localization/src/extensions/locale_extensions.dart';
 import 'package:playx_localization/src/model/x_locale.dart';
 
 import 'config/playx_locale_config.dart';
@@ -23,8 +23,6 @@ abstract class PlayxLocalization {
     required PlayxLocaleConfig config,
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
-    EasyLocalization.logger.name = 'Playx_localization';
-    EasyLocalization.logger('boot Localization');
     final controller = PlayxLocaleController(config: config);
     return controller.boot();
   }

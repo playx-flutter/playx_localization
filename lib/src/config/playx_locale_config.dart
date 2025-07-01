@@ -1,3 +1,6 @@
+import 'package:flutter/cupertino.dart';
+import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
+
 import '../../playx_localization.dart';
 
 /// Locale config :
@@ -49,11 +52,22 @@ class PlayxLocaleConfig {
   /// @Default value true
   final bool saveLocale;
 
-  /// Log missing keys in the console.
+  /// Log missing keys in the console when a key is not found in the current locale file in debug mode.
   final bool logMissingKeys;
+
+  /// Log locale changes in the console when the locale is changed.
+  final bool logLocaleChanges;
 
   /// Migrate preferences to async storage.
   final bool migratePrefsToAsync;
+
+  /// Additional custom delegates, e.g., from third-party packages.
+  final List<LocalizationsDelegate>? extraDelegates;
+
+  /// Custom localization delegate builder.
+  /// This allows you to create a custom list of delegates based on the provided [PlayxLocalizationDelegate].
+  final List<LocalizationsDelegate> Function(
+      PlayxLocalizationDelegate delegate)? customLocalizationDelegateBuilder;
 
   PlayxLocaleConfig({
     required this.supportedLocales,
@@ -65,7 +79,10 @@ class PlayxLocaleConfig {
     this.assetLoader = const RootBundleAssetLoader(),
     this.saveLocale = true,
     this.logMissingKeys = false,
+    this.logLocaleChanges = true,
     this.migratePrefsToAsync = false,
+    this.extraDelegates,
+    this.customLocalizationDelegateBuilder,
   })  : assert(path.isNotEmpty, 'path can not be empty'),
         assert(
             supportedLocales.isNotEmpty, 'supportedLocales can not be empty');
