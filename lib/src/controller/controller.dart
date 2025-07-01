@@ -1,3 +1,5 @@
+import 'dart:nativewrappers/_internal/vm/lib/ffi_allocation_patch.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl_standalone.dart';
@@ -355,8 +357,11 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   }
 
   //delegates to be used in material app.
-  List<LocalizationsDelegate> get delegates => [
+  List<LocalizationsDelegate> get delegates =>
+      config.customLocalizationDelegateBuilder?.call(delegate) ??
+      [
         delegate,
+        ...?config.extraDelegates,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
