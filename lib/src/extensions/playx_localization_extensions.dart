@@ -39,6 +39,7 @@ extension PlayxLocalizationStringExtensions on String {
   /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
   String plural(
     num value, {
+    BuildContext? context,
     List<String>? args,
     Map<String, String>? namedArgs,
     String? name,
@@ -51,6 +52,7 @@ extension PlayxLocalizationStringExtensions on String {
         namedArgs: namedArgs,
         name: name,
         format: format,
+        context: context,
       );
 }
 
@@ -230,8 +232,8 @@ extension BuildContextLocalizationExtension on BuildContext {
   bool get isCurrentLocaleEnglish => currentLanguageCode == 'en';
 
   /// Returns true if the current locale is RTL (e.g., Arabic, Hebrew).
-  bool get isRtl => Bidi.hasAnyRtl(currentLanguageCode);
+  bool get isCurrentLocaleRtl => Bidi.hasAnyRtl(currentLanguageCode);
 
   /// Returns true if the current locale is LTR.
-  bool get isLtr => !isRtl;
+  bool get isCurrentLocaleLtr => !isCurrentLocaleRtl;
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+- Bumping `playx_core` dependency to `^0.7.4`.
+- Renaming `isRtl` and `isLtr` getters to `isCurrentLocaleRtl` and `isCurrentLocaleLtr` respectively for better clarity.
+- Allow passing BuildContext to plural for locale-aware formatting
+
+
 ## 0.3.0
 
 ### Enhancements
