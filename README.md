@@ -22,7 +22,7 @@ Integrating **Playx Localization** into your Flutter project is straightforward.
 Include the following line in your `pubspec.yaml` file under the `dependencies` section:
 
 ```yaml  
-playx_localization: ^0.1.0  
+playx_localization: ^0.3.1  
 ``` 
 
 ### Add Translation Files
