@@ -25,15 +25,22 @@ class PlayxLocalizationDelegate extends LocalizationsDelegate<Localization> {
   Future<Localization> load(Locale locale) async {
     if (localizationController!.translations == null) {
       final xLocale = localizationController!.searchLocaleByLanguageCode(
-          languageCode: locale.languageCode, countryCode: locale.countryCode);
+          languageCode: locale.languageCode,
+          countryCode: locale.countryCode,
+          scriptCode: locale.scriptCode);
       if (xLocale == null) {
         throw UnsupportedError('Locale not found');
       }
       await localizationController!.loadTranslations(xLocale);
     }
-    Localization.load(locale,
-        translations: localizationController!.translations,
-        fallbackTranslations: localizationController!.fallbackTranslations);
+    Localization.load(
+      locale,
+      translations: localizationController!.translations,
+      fallbackTranslations: localizationController!.fallbackTranslations,
+      useFallbackTranslationsForEmptyResources: localizationController!
+          .config.useFallbackTranslationsForEmptyResources,
+      ignorePluralRules: localizationController!.config.ignorePluralRules,
+    );
 
     return Future.value(Localization.instance);
   }

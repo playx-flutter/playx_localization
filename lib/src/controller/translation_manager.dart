@@ -75,17 +75,45 @@ class TranslationManager {
 
   static Future<Map<String, dynamic>> loadTranslationData(
       {required XLocale locale, required PlayxLocaleConfig config}) async {
-    late Map<String, dynamic>? data;
+    final result = <String, dynamic>{};
+    final loaderFutures = <Future<Map<String, dynamic>?>>[];
 
-    if (config.useOnlyLangCode) {
-      data = await config.assetLoader
-          .load(config.path, Locale(locale.languageCode));
-    } else {
-      data = await config.assetLoader.load(config.path, locale.locale);
+    final Locale desiredLocale = config.useOnlyLangCode
+        ? Locale.fromSubtags(
+            languageCode: locale.languageCode, scriptCode: locale.scriptCode)
+        : locale.locale;
+
+    List<AssetLoader> loaders = [
+      config.assetLoader,
+      if (config.extraAssetLoaders != null) ...config.extraAssetLoaders!
+    ];
+
+    for (final loader in loaders) {
+      loaderFutures.add(loader.load(config.path, desiredLocale));
     }
 
-    if (data == null) return {};
+    await Future.wait(loaderFutures).then((List<Map<String, dynamic>?> value) {
+      for (final Map<String, dynamic>? map in value) {
+        if (map != null) {
+          result.addAllRecursive(map);
+        }
+      }
+    });
 
-    return data;
+    return result;
+  }
+}
+
+extension MapExtension on Map<String, dynamic> {
+  void addAllRecursive(Map<String, dynamic> other) {
+    other.forEach((key, value) {
+      if (this[key] == null) {
+        this[key] = value;
+      } else if (this[key] is Map<String, dynamic> && value is Map<String, dynamic>) {
+        (this[key] as Map<String, dynamic>).addAllRecursive(value);
+      } else {
+        this[key] = value;
+      }
+    });
   }
 }
