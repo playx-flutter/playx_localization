@@ -247,4 +247,7 @@ extension BuildContextLocalizationExtension on BuildContext {
 
   /// Returns true if the current locale is LTR.
   bool get isCurrentLocaleLtr => !isCurrentLocaleRtl;
+
+  /// Returns true if the app is currently synced to the device locale.
+  bool get isDeviceLocaleSelected => PlayxLocalization.isDeviceLocaleSelected;
 }

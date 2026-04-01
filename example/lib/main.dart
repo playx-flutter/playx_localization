@@ -16,6 +16,7 @@ Future<void> main() async {
     startLocale: locales.first,
     fallbackLocale: locales.first,
     useFallbackTranslations: true,
+    preloadSupportedLocales: true,
   );
   await PlayxLocalization.boot(config: config);
 
@@ -65,6 +66,15 @@ class MyHomePage extends StatelessWidget {
                                   .isArabic
                               ? Colors.blueAccent
                               : Colors.black),
+                ),
+                Text(
+                  context.tr(AppTrans.changeLanguageTitle,
+                      locale: Locale('ar')),
+                  style: TextStyle(
+                      fontSize: 18,
+                      color: (context.tr(AppTrans.changeLanguageTitle)).isArabic
+                          ? Colors.blueAccent
+                          : Colors.black),
                 ),
                 const SizedBox(
                   height: 20,
