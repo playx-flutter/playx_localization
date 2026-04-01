@@ -12,6 +12,7 @@ class TranslationManager {
       ({
         Translations? translations,
         Translations? fallbackTranslations,
+        Map<Locale, Translations>? preloadedTranslations,
       })> loadTranslations({
     required XLocale locale,
     bool useFallbackTranslations = true,
@@ -19,7 +20,19 @@ class TranslationManager {
     required XLocale fallbackLocale,
   }) async {
     Map<String, dynamic> data;
+    Map<Locale, Translations>? preloadedTranslations;
+
     try {
+      if (config.preloadSupportedLocales) {
+        preloadedTranslations = {};
+        for (final supportedXLocale in config.supportedLocales) {
+          final supportedData = await loadTranslationData(
+              locale: supportedXLocale, config: config);
+          preloadedTranslations[supportedXLocale.locale] =
+              Translations(Map.from(supportedData));
+        }
+      }
+
       data =
           Map.from(await loadTranslationData(locale: locale, config: config));
       final translations = Translations(data);
@@ -41,15 +54,20 @@ class TranslationManager {
         final fallbackTranslations = Translations(data);
         return (
           translations: translations,
-          fallbackTranslations: fallbackTranslations
+          fallbackTranslations: fallbackTranslations,
+          preloadedTranslations: preloadedTranslations,
         );
       }
-      return (translations: translations, fallbackTranslations: null);
+      return (
+        translations: translations,
+        fallbackTranslations: null,
+        preloadedTranslations: preloadedTranslations,
+      );
     } on FlutterError catch (e, s) {
       // onLoadError(e);
       PlayxLocaleController.logger
           ?.error('Error loading translations: ', error: e, stackTrace: s);
-      return (translations: null, fallbackTranslations: null);
+      return (translations: null, fallbackTranslations: null, preloadedTranslations: null);
     } catch (e, s) {
       PlayxLocaleController.logger
           ?.error('Error loading translations: ', error: e, stackTrace: s);
@@ -57,6 +75,7 @@ class TranslationManager {
       return (
         translations: null,
         fallbackTranslations: null,
+        preloadedTranslations: null,
       );
     }
   }
@@ -75,17 +94,45 @@ class TranslationManager {
 
   static Future<Map<String, dynamic>> loadTranslationData(
       {required XLocale locale, required PlayxLocaleConfig config}) async {
-    late Map<String, dynamic>? data;
+    final result = <String, dynamic>{};
+    final loaderFutures = <Future<Map<String, dynamic>?>>[];
 
-    if (config.useOnlyLangCode) {
-      data = await config.assetLoader
-          .load(config.path, Locale(locale.languageCode));
-    } else {
-      data = await config.assetLoader.load(config.path, locale.locale);
+    final Locale desiredLocale = config.useOnlyLangCode
+        ? Locale.fromSubtags(
+            languageCode: locale.languageCode, scriptCode: locale.scriptCode)
+        : locale.locale;
+
+    List<AssetLoader> loaders = [
+      config.assetLoader,
+      if (config.extraAssetLoaders != null) ...config.extraAssetLoaders!
+    ];
+
+    for (final loader in loaders) {
+      loaderFutures.add(loader.load(config.path, desiredLocale));
     }
 
-    if (data == null) return {};
+    await Future.wait(loaderFutures).then((List<Map<String, dynamic>?> value) {
+      for (final Map<String, dynamic>? map in value) {
+        if (map != null) {
+          result.addAllRecursive(map);
+        }
+      }
+    });
 
-    return data;
+    return result;
+  }
+}
+
+extension MapExtension on Map<String, dynamic> {
+  void addAllRecursive(Map<String, dynamic> other) {
+    other.forEach((key, value) {
+      if (this[key] == null) {
+        this[key] = value;
+      } else if (this[key] is Map<String, dynamic> && value is Map<String, dynamic>) {
+        (this[key] as Map<String, dynamic>).addAllRecursive(value);
+      } else {
+        this[key] = value;
+      }
+    });
   }
 }

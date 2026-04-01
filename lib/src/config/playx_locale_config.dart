@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
 
 import '../../playx_localization.dart';
+import '../easy_localization/file_loaders/root_bundle_file_loader.dart';
+import '../easy_localization/linked_file_resolver.dart';
 
 /// Locale config :
 /// used to configure out app locales by providing the app with the supported locales and localization settings.
@@ -64,6 +66,24 @@ class PlayxLocaleConfig {
   /// Additional custom delegates, e.g., from third-party packages.
   final List<LocalizationsDelegate>? extraDelegates;
 
+  /// If a localization key is empty in the locale file, try to use the fallbackLocale file.
+  /// Does not take effect if [useFallbackTranslations] is false.
+  /// @Default value false
+  final bool useFallbackTranslationsForEmptyResources;
+
+  /// Ignore usage of plural strings for languages that do not use plural rules.
+  /// @Default value true
+  final bool ignorePluralRules;
+
+  /// Class loader for localization files that belong to other packages.
+  /// @Default value `null`
+  final List<AssetLoader>? extraAssetLoaders;
+
+  /// When true, all supported locales are preloaded into memory when the controller initializes.
+  /// This allows translating to arbitrary locales synchronously using `tr(locale: ...)` without 
+  /// updating the app locale. Warning: Doing this might consume more memory if there are many locales.
+  final bool preloadSupportedLocales;
+
   /// Custom localization delegate builder.
   /// This allows you to create a custom list of delegates based on the provided [PlayxLocalizationDelegate].
   final List<LocalizationsDelegate> Function(
@@ -75,8 +95,16 @@ class PlayxLocaleConfig {
     this.fallbackLocale,
     this.useOnlyLangCode = false,
     this.useFallbackTranslations = true,
+    this.useFallbackTranslationsForEmptyResources = false,
+    this.ignorePluralRules = true,
+    this.preloadSupportedLocales = false,
     this.path = 'assets/translations',
-    this.assetLoader = const RootBundleAssetLoader(),
+    this.assetLoader = const RootBundleAssetLoader(
+      fileLoader: RootBundleFileLoader(),
+      linkedFileResolver:
+          JsonLinkedFileResolver(fileLoader: RootBundleFileLoader()),
+    ),
+    this.extraAssetLoaders,
     this.saveLocale = true,
     this.logMissingKeys = false,
     this.logLocaleChanges = true,

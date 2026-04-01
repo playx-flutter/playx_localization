@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:playx_localization/playx_localization.dart';
 
 import '../controller/controller.dart';
 import 'plural_rules.dart';
@@ -7,6 +8,7 @@ import 'translations.dart';
 
 class Localization {
   Translations? _translations, _fallbackTranslations;
+  Map<Locale, Translations>? _preloadedTranslations;
   late Locale _locale;
 
   final RegExp _replaceArgRegex = RegExp('{}');
@@ -36,12 +38,14 @@ class Localization {
     Locale locale, {
     Translations? translations,
     Translations? fallbackTranslations,
+    Map<Locale, Translations>? preloadedTranslations,
     bool useFallbackTranslationsForEmptyResources = false,
     bool ignorePluralRules = true,
   }) {
     instance._locale = locale;
     instance._translations = translations;
     instance._fallbackTranslations = fallbackTranslations;
+    instance._preloadedTranslations = preloadedTranslations;
     instance._useFallbackTranslationsForEmptyResources =
         useFallbackTranslationsForEmptyResources;
     instance._ignorePluralRules = ignorePluralRules;
@@ -53,6 +57,7 @@ class Localization {
     List<String>? args,
     Map<String, String>? namedArgs,
     String? gender,
+    Locale? locale,
   }) {
     late String res;
     bool logMissingKeys = true;
@@ -63,9 +68,9 @@ class Localization {
     }
 
     if (gender != null) {
-      res = _gender(key, gender: gender);
+      res = _gender(key, gender: gender, locale: locale);
     } else {
-      res = _resolve(key, logging: logMissingKeys);
+      res = _resolve(key, logging: logMissingKeys, locale: locale);
     }
 
     res = _replaceLinks(res, logging: logMissingKeys);
@@ -153,31 +158,33 @@ class Localization {
     Map<String, String>? namedArgs,
     String? name,
     NumberFormat? format,
+    Locale? locale,
   }) {
     late String res;
 
-    final pluralRule = _pluralRule(_locale.languageCode, value);
+    final pLangCode = locale?.languageCode ?? _locale.languageCode;
+    final pluralRule = _pluralRule(pLangCode, value);
     final pluralCase =
         pluralRule != null ? pluralRule() : _pluralCaseFallback(value);
 
     switch (pluralCase) {
       case PluralCase.ZERO:
-        res = _resolvePlural(key, 'zero');
+        res = _resolvePlural(key, 'zero', locale: locale);
         break;
       case PluralCase.ONE:
-        res = _resolvePlural(key, 'one');
+        res = _resolvePlural(key, 'one', locale: locale);
         break;
       case PluralCase.TWO:
-        res = _resolvePlural(key, 'two');
+        res = _resolvePlural(key, 'two', locale: locale);
         break;
       case PluralCase.FEW:
-        res = _resolvePlural(key, 'few');
+        res = _resolvePlural(key, 'few', locale: locale);
         break;
       case PluralCase.MANY:
-        res = _resolvePlural(key, 'many');
+        res = _resolvePlural(key, 'many', locale: locale);
         break;
       case PluralCase.OTHER:
-        res = _resolvePlural(key, 'other');
+        res = _resolvePlural(key, 'other', locale: locale);
         break;
     }
 
@@ -191,31 +198,64 @@ class Localization {
     return _replaceArgs(res, args ?? [formattedValue]);
   }
 
-  String _gender(String key, {required String gender}) {
-    return _resolve('$key.$gender');
+  String _gender(String key, {required String gender, Locale? locale}) {
+    return _resolve('$key.$gender', locale: locale);
   }
 
-  String _resolvePlural(String key, String subKey) {
-    if (subKey == 'other') return _resolve('$key.other');
+  String _resolvePlural(String key, String subKey, {Locale? locale}) {
+    if (subKey == 'other') return _resolve('$key.other', locale: locale);
 
     final tag = '$key.$subKey';
     var resource =
-        _resolve(tag, logging: false, fallback: _fallbackTranslations != null);
+        _resolve(tag, logging: false, fallback: _fallbackTranslations != null, locale: locale);
     if (resource == tag) {
-      resource = _resolve('$key.other');
+      resource = _resolve('$key.other', locale: locale);
     }
     return resource;
   }
 
-  String _resolve(String key, {bool logging = true, bool fallback = true}) {
-    var resource = _translations?.get(key);
+  String _resolve(String key, {bool logging = true, bool fallback = true, Locale? locale}) {
+    String? resource;
+    bool isRequestedLanguageFallback = false;
+
+    if (locale != null) {
+      final xLocale = PlayxLocaleController.controller.config.supportedLocales.firstWhereOrNull((e) => e.locale.supports(locale));
+      if (xLocale != null) {
+        if (xLocale.locale == _locale) {
+          resource = _translations?.get(key);
+        } else {
+          final fallbackLocale = PlayxLocaleController.controller.getFallbackLocale();
+          if (xLocale.locale == fallbackLocale.locale) {
+            resource = _fallbackTranslations?.get(key);
+            isRequestedLanguageFallback = true;
+          } else if (_preloadedTranslations != null && _preloadedTranslations!.containsKey(xLocale.locale)) {
+            resource = _preloadedTranslations![xLocale.locale]?.get(key);
+          } else {
+            if (logging) {
+              PlayxLocaleController.logger?.warning(
+                  'Translations for $locale are not loaded. Set preloadSupportedLocales to true in PlayxLocaleConfig to support this, or only request current/fallback locales.');
+            }
+            return key;
+          }
+        }
+      } else {
+        if (logging) {
+          PlayxLocaleController.logger?.warning(
+              'Translations for $locale are not supported in config.');
+        }
+        return key;
+      }
+    } else {
+      resource = _translations?.get(key);
+    }
+
     if (resource == null ||
         (_useFallbackTranslationsForEmptyResources && resource.isEmpty)) {
-      if (logging) {
+      if (logging && !isRequestedLanguageFallback) {
         PlayxLocaleController.logger
             ?.warning('Localization key [$key] not found');
       }
-      if (_fallbackTranslations == null || !fallback) {
+      if (_fallbackTranslations == null || !fallback || isRequestedLanguageFallback) {
         return key;
       } else {
         resource = _fallbackTranslations?.get(key);

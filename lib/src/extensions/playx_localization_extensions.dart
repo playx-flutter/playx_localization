@@ -22,9 +22,10 @@ extension PlayxLocalizationStringExtensions on String {
     List<String>? args,
     Map<String, String>? namedArgs,
     String? gender,
+    Locale? locale,
   }) =>
       ez.tr(this,
-          context: context, args: args, namedArgs: namedArgs, gender: gender);
+          context: context, args: args, namedArgs: namedArgs, gender: gender, locale: locale);
 
   bool trExists() => ez.trExists(this);
 
@@ -44,6 +45,7 @@ extension PlayxLocalizationStringExtensions on String {
     Map<String, String>? namedArgs,
     String? name,
     NumberFormat? format,
+    Locale? locale,
   }) =>
       ez.plural(
         this,
@@ -53,6 +55,7 @@ extension PlayxLocalizationStringExtensions on String {
         name: name,
         format: format,
         context: context,
+        locale: locale,
       );
 }
 
@@ -68,7 +71,8 @@ extension TextTranslateExtension on Text {
           {List<String>? args,
           BuildContext? context,
           Map<String, String>? namedArgs,
-          String? gender}) =>
+          String? gender,
+          Locale? locale}) =>
       Text(
           ez.tr(
             data ?? '',
@@ -76,6 +80,7 @@ extension TextTranslateExtension on Text {
             namedArgs: namedArgs,
             gender: gender,
             context: context,
+            locale: locale,
           ),
           key: key,
           style: style,
@@ -98,6 +103,7 @@ extension TextTranslateExtension on Text {
     Map<String, String>? namedArgs,
     String? name,
     NumberFormat? format,
+    Locale? locale,
   }) =>
       Text(
           ez.plural(
@@ -108,6 +114,7 @@ extension TextTranslateExtension on Text {
             namedArgs: namedArgs,
             name: name,
             format: format,
+            locale: locale,
           ),
           key: key,
           style: style,
@@ -158,6 +165,7 @@ extension BuildContextLocalizationExtension on BuildContext {
     List<String>? args,
     Map<String, String>? namedArgs,
     String? gender,
+    Locale? locale,
   }) {
     final localization = Localization.of(this);
 
@@ -170,6 +178,7 @@ extension BuildContextLocalizationExtension on BuildContext {
       args: args,
       namedArgs: namedArgs,
       gender: gender,
+      locale: locale,
     );
   }
 
@@ -190,6 +199,7 @@ extension BuildContextLocalizationExtension on BuildContext {
     Map<String, String>? namedArgs,
     String? name,
     NumberFormat? format,
+    Locale? locale,
   }) {
     final localization = Localization.of(this);
 
@@ -204,6 +214,7 @@ extension BuildContextLocalizationExtension on BuildContext {
       namedArgs: namedArgs,
       name: name,
       format: format,
+      locale: locale,
     );
   }
 
@@ -236,4 +247,7 @@ extension BuildContextLocalizationExtension on BuildContext {
 
   /// Returns true if the current locale is LTR.
   bool get isCurrentLocaleLtr => !isCurrentLocaleRtl;
+
+  /// Returns true if the app is currently synced to the device locale.
+  bool get isDeviceLocaleSelected => PlayxLocalization.isDeviceLocaleSelected;
 }
