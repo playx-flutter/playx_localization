@@ -79,6 +79,11 @@ class PlayxLocaleConfig {
   /// @Default value `null`
   final List<AssetLoader>? extraAssetLoaders;
 
+  /// When true, all supported locales are preloaded into memory when the controller initializes.
+  /// This allows translating to arbitrary locales synchronously using `tr(locale: ...)` without 
+  /// updating the app locale. Warning: Doing this might consume more memory if there are many locales.
+  final bool preloadSupportedLocales;
+
   /// Custom localization delegate builder.
   /// This allows you to create a custom list of delegates based on the provided [PlayxLocalizationDelegate].
   final List<LocalizationsDelegate> Function(
@@ -92,6 +97,7 @@ class PlayxLocaleConfig {
     this.useFallbackTranslations = true,
     this.useFallbackTranslationsForEmptyResources = false,
     this.ignorePluralRules = true,
+    this.preloadSupportedLocales = false,
     this.path = 'assets/translations',
     this.assetLoader = const RootBundleAssetLoader(
       fileLoader: RootBundleFileLoader(),

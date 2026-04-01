@@ -12,6 +12,7 @@ class TranslationManager {
       ({
         Translations? translations,
         Translations? fallbackTranslations,
+        Map<Locale, Translations>? preloadedTranslations,
       })> loadTranslations({
     required XLocale locale,
     bool useFallbackTranslations = true,
@@ -19,7 +20,19 @@ class TranslationManager {
     required XLocale fallbackLocale,
   }) async {
     Map<String, dynamic> data;
+    Map<Locale, Translations>? preloadedTranslations;
+
     try {
+      if (config.preloadSupportedLocales) {
+        preloadedTranslations = {};
+        for (final supportedXLocale in config.supportedLocales) {
+          final supportedData = await loadTranslationData(
+              locale: supportedXLocale, config: config);
+          preloadedTranslations[supportedXLocale.locale] =
+              Translations(Map.from(supportedData));
+        }
+      }
+
       data =
           Map.from(await loadTranslationData(locale: locale, config: config));
       final translations = Translations(data);
@@ -41,15 +54,20 @@ class TranslationManager {
         final fallbackTranslations = Translations(data);
         return (
           translations: translations,
-          fallbackTranslations: fallbackTranslations
+          fallbackTranslations: fallbackTranslations,
+          preloadedTranslations: preloadedTranslations,
         );
       }
-      return (translations: translations, fallbackTranslations: null);
+      return (
+        translations: translations,
+        fallbackTranslations: null,
+        preloadedTranslations: preloadedTranslations,
+      );
     } on FlutterError catch (e, s) {
       // onLoadError(e);
       PlayxLocaleController.logger
           ?.error('Error loading translations: ', error: e, stackTrace: s);
-      return (translations: null, fallbackTranslations: null);
+      return (translations: null, fallbackTranslations: null, preloadedTranslations: null);
     } catch (e, s) {
       PlayxLocaleController.logger
           ?.error('Error loading translations: ', error: e, stackTrace: s);
@@ -57,6 +75,7 @@ class TranslationManager {
       return (
         translations: null,
         fallbackTranslations: null,
+        preloadedTranslations: null,
       );
     }
   }

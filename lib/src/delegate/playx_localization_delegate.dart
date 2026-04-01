@@ -37,6 +37,7 @@ class PlayxLocalizationDelegate extends LocalizationsDelegate<Localization> {
       locale,
       translations: localizationController!.translations,
       fallbackTranslations: localizationController!.fallbackTranslations,
+      preloadedTranslations: localizationController!.preloadedTranslations,
       useFallbackTranslationsForEmptyResources: localizationController!
           .config.useFallbackTranslationsForEmptyResources,
       ignorePluralRules: localizationController!.config.ignorePluralRules,

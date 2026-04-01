@@ -1,11 +1,11 @@
 # Changelog
 
-## 0.3.2
+## 0.4.0
 - **Enhanced Locale Config**: Added `useFallbackTranslationsForEmptyResources`, `ignorePluralRules`, `extraAssetLoaders`, and `errorWidget` to `PlayxLocaleConfig`.
 - **Script Code Support**: Added `scriptCode` natively to `XLocale` and updated locale matching in `PlayxLocaleController` to properly utilize it.
 - **Deep Translation Merging**: `TranslationManager` now supports combining JSON translation maps securely from multiple asset loaders.
 - **Device Sync Reset**: Introduced `resetLocale()` to safely recalculate and synchronize the application's locale against device-level configurations.
-
+- **Synchronous Any-Locale Translation**: Added `preloadSupportedLocales` to `PlayxLocaleConfig`. When enabled, it caches all dictionaries during initialization, allowing developers to query translations for any loaded `Locale? locale` parametrically using `tr(..., locale: ...)` synchronously, completely out-of-bounds, without overriding the app environment.
 ## 0.3.1
 - Bumping `playx_core` dependency to `^0.7.4`.
 - Renaming `isRtl` and `isLtr` getters to `isCurrentLocaleRtl` and `isCurrentLocaleLtr` respectively for better clarity.

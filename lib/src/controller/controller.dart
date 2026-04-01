@@ -36,12 +36,16 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   late PlayxLocalizationDelegate delegate;
 
   Translations? _translations, _fallbackTranslations;
+  Map<Locale, Translations>? _preloadedTranslations;
 
   /// current translations loaded from assets.
   Translations? get translations => _translations;
 
   /// current fallback translations loaded from assets.
   Translations? get fallbackTranslations => _fallbackTranslations;
+
+  /// all preloaded translations loaded from assets, if config.preloadSupportedLocales is true.
+  Map<Locale, Translations>? get preloadedTranslations => _preloadedTranslations;
 
   // Returns the device locale.
   Locale? deviceLocale;
@@ -166,11 +170,13 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     );
     _translations = res.translations;
     _fallbackTranslations = res.fallbackTranslations;
+    _preloadedTranslations = res.preloadedTranslations;
 
     Localization.load(
       locale.locale,
-      translations: translations,
-      fallbackTranslations: fallbackTranslations,
+      translations: _translations,
+      fallbackTranslations: _fallbackTranslations,
+      preloadedTranslations: _preloadedTranslations,
       useFallbackTranslationsForEmptyResources:
           config.useFallbackTranslationsForEmptyResources,
       ignorePluralRules: config.ignorePluralRules,
