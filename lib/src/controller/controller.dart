@@ -93,8 +93,12 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     final locale = _getStartLocale(savedLocale: lastSavedLocale);
 
     //Load translations from assets
-    await loadTranslations(locale);
-    logger.i('Loaded Translation from assets');
+    if (await loadTranslations(locale)) {
+      logger.i('Loaded Translation from assets');
+    } else {
+      // Keep Localization in a usable state; the delegate retries loading.
+      _syncLocalization(locale);
+    }
 
     delegate = PlayxLocalizationDelegate(
       localizationController: this,
@@ -171,18 +175,24 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     return config.supportedLocales.first;
   }
 
-  /// Load translations from assets
-  Future<void> loadTranslations(XLocale locale) async {
+  /// Load translations from assets.
+  ///
+  /// Returns `false` if loading failed. In that case the previously loaded
+  /// translations are kept.
+  Future<bool> loadTranslations(XLocale locale) async {
     final res = await TranslationManager.loadTranslations(
       locale: locale,
       config: config,
+      useFallbackTranslations: config.useFallbackTranslations,
       fallbackLocale: getFallbackLocale(),
     );
+    if (res.translations == null) return false;
     _translations = res.translations;
     _fallbackTranslations = res.fallbackTranslations;
     _preloadedTranslations = res.preloadedTranslations;
     await _loadRequestedPreloads();
     _syncLocalization(locale);
+    return true;
   }
 
   void _syncLocalization(XLocale locale) {
@@ -242,8 +252,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   Future<void> reloadTranslations() async {
     final current = value;
     if (current == null) return;
-    await loadTranslations(current);
-    notifyListeners();
+    if (await loadTranslations(current)) notifyListeners();
   }
 
   /// update the locale to be one of the supported locales.
@@ -391,9 +400,13 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
         return false;
       }
 
-      await loadTranslations(
-        locale,
-      );
+      if (!await loadTranslations(locale)) {
+        if (config.logLocaleChanges) {
+          logger?.error(
+              'Could not load translations for ${locale.name}; keeping the current locale.');
+        }
+        return false;
+      }
       if (config.saveLocale) {
         final savedIndex = saveAsDeviceLocale ? -1 : index;
         await PlayxAsyncPrefs.setInt(_lastKnownIndexKey, savedIndex);

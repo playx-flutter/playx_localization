@@ -11,6 +11,16 @@
 - **`translate` option**: `tr` and `plural` (String, `Text` and `BuildContext` variants) accept `translate: false` to return the text as-is, still applying `args` / `namedArgs`.
 - **`preloadLocales`**: New `PlayxLocalization.preloadLocales` loads only the locales you need so `tr(locale: ...)` works for them without enabling `preloadSupportedLocales` for all locales.
 - `tr` with a `BuildContext` now falls back to the global instance when no `Localization` is found in the context, instead of throwing.
+- **Fix**: `config.useFallbackTranslations` was ignored; the fallback locale was always loaded. It is now respected.
+- **Fix**: A failed locale switch (for example a missing translation file) no longer wipes the loaded translations, changes the locale or saves it. `updateTo`, `updateById`, etc. now return `false` and keep the current locale. `loadTranslations` now returns a `bool`.
+- **Fix**: One missing or broken locale file no longer breaks `preloadSupportedLocales` for all locales.
+- **Fix**: Looking up a key that points to a group (e.g. `'home'` when `home` is an object) crashed; a path through a text value (`'a.b.c'` where `a.b` is text) returned the wrong text. Both now behave like a missing key.
+- **Fix**: `namedArgs` whose names contain regex characters (e.g. `{a.b}`, `{x+y}`) were not replaced.
+- **Fix**: `@:key` links are now resolved in the locale passed to `tr(locale: ...)` instead of the current locale, and the `@.capitalize:` modifier no longer crashes on empty text.
+- **Fix**: `PlayxLocalization.currentLocaleToString` was not `static`, so it could not be called. `PlayxLocalization.updateByLanguageCode` now accepts `scriptCode`.
+- **Fix**: `context.isCurrentLocaleRtl` / `isCurrentLocaleLtr` always reported LTR because they analyzed the language code as text.
+- **Fix**: `Text(...).tr()` and `.plural()` dropped the original `Text.locale`.
+- The optional base-language fallback file (e.g. `en` for `en-US`) is now merged recursively and any load failure for it is ignored.
 - **Fix**: Linking the same translation file from multiple keys is no longer reported as a cyclic link. Only real cycles throw now.
 - Added a unit test suite covering plural rules, translations, linked file resolution, translation merging, device-sync persistence, `scriptCode` locale matching, and the string, number and locale extensions.
 - Fixed analyzer lints.

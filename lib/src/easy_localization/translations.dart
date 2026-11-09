@@ -3,47 +3,41 @@ class Translations {
   final Map<String?, dynamic> _nestedKeysCache;
 
   Translations(this._translations) : _nestedKeysCache = {};
+
+  /// Returns the text for [key], or `null` if it is missing or is not a text
+  /// (for example a group of nested keys).
   String? get(String key) {
-    String? returnValue;
+    final translations = _translations;
+    if (translations == null) return null;
 
-    /// Try to look it up as a nested key
-    if (isNestedKey(key)) {
-      returnValue = getNested(key);
-    }
+    // A literal key wins, even if it contains dots.
+    if (translations.containsKey(key)) return _asText(translations[key]);
 
-    /// If we failed to find the key as a nested key, then fall back
-    /// to looking it up like normal.
-    returnValue ??= _translations?[key];
-
-    return returnValue;
+    if (key.contains('.')) return getNested(key);
+    return null;
   }
 
   String? getNested(String key) {
     if (isNestedCached(key)) return _nestedKeysCache[key];
 
-    final keys = key.split('.');
-    final kHead = keys.first;
-
-    var value = _translations![kHead];
-
-    // print(value);
-
-    for (var i = 1; i < keys.length; i++) {
-      if (value is Map<String, dynamic>) value = value[keys[i]];
+    Object? value = _translations;
+    for (final part in key.split('.')) {
+      if (value is! Map) return null;
+      value = value[part];
     }
 
-    /// If we found the value, cache it. If the value is null then
-    /// we're not going to cache it, and returning null instead.
-    if (value != null) {
-      cacheNestedKey(key, value);
-    }
+    final text = _asText(value);
 
-    return value;
+    /// Only found values are cached.
+    if (text != null) cacheNestedKey(key, text);
+    return text;
   }
 
-  // bool has(String key) => isNestedKey(key)
-  //     ? getNested(key) != null
-  //     : _translations.containsKey(key);
+  static String? _asText(Object? value) {
+    if (value is String) return value;
+    if (value is num || value is bool) return value.toString();
+    return null;
+  }
 
   bool isNestedCached(String key) => _nestedKeysCache.containsKey(key);
 
@@ -56,7 +50,7 @@ class Translations {
   }
 
   bool isNestedKey(String key) =>
-      !_translations!.containsKey(key) && key.contains('.');
+      !(_translations?.containsKey(key) ?? false) && key.contains('.');
 
   @override
   String toString() {

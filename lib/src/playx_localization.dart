@@ -121,10 +121,12 @@ abstract class PlayxLocalization {
   static Future<bool> updateByLanguageCode(
           {required String languageCode,
           String? countryCode,
+          String? scriptCode,
           bool forceAppUpdate = false}) =>
       _controller.updateByLanguageCode(
           languageCode: languageCode,
           countryCode: countryCode,
+          scriptCode: scriptCode,
           forceAppUpdate: forceAppUpdate);
 
   /// Updates the locale to current device locale.
@@ -141,7 +143,7 @@ abstract class PlayxLocalization {
   static bool isCurrentLocaleRtl() => _controller.isCurrentLocaleRtl();
 
   /// Convert current [locale] to String with custom [separator] representing language code and country code.
-  String currentLocaleToString({String separator = '_'}) =>
+  static String currentLocaleToString({String separator = '_'}) =>
       _controller.currentLocaleToString(separator: separator);
 
   ///delete saved locale from device storage.

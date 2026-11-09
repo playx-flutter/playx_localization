@@ -27,10 +27,18 @@ class TranslationManager {
       if (config.preloadSupportedLocales) {
         preloadedTranslations = {};
         for (final supportedXLocale in config.supportedLocales) {
-          final supportedData = await loadTranslationData(
-              locale: supportedXLocale, config: config);
-          preloadedTranslations[supportedXLocale.locale] =
-              Translations(Map.from(supportedData));
+          try {
+            final supportedData = await loadTranslationData(
+                locale: supportedXLocale, config: config);
+            preloadedTranslations[supportedXLocale.locale] =
+                Translations(Map.from(supportedData));
+          } catch (e, s) {
+            // One broken or missing locale must not break the others.
+            PlayxLocaleController.logger?.error(
+                'Error preloading ${supportedXLocale.locale}: ',
+                error: e,
+                stackTrace: s);
+          }
         }
       }
 
@@ -46,11 +54,7 @@ class TranslationManager {
         data = Map.from(
             await loadTranslationData(locale: fallbackLocale, config: config));
         if (baseLangData != null) {
-          try {
-            data.addAll(baseLangData);
-          } on UnsupportedError {
-            data = Map.of(data)..addAll(baseLangData);
-          }
+          data.addAllRecursive(baseLangData);
         }
         final fallbackTranslations = Translations(data);
         return (
@@ -85,10 +89,10 @@ class TranslationManager {
       {required XLocale locale, required PlayxLocaleConfig config}) async {
     try {
       return await loadTranslationData(locale: locale, config: config);
-    } on FlutterError catch (e, s) {
-      // Disregard asset not found FlutterError when attempting to load base language fallback
-      PlayxLocaleController.logger
-          ?.error('Error loading translations: ', error: e, stackTrace: s);
+    } catch (e) {
+      // The base language file is optional, so any failure is disregarded.
+      PlayxLocaleController.logger?.debug(
+          'No base language translations for ${locale.languageCode}: $e');
     }
     return null;
   }

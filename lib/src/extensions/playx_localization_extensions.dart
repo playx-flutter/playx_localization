@@ -103,7 +103,7 @@ extension TextTranslateExtension on Text {
           strutStyle: strutStyle,
           textAlign: textAlign,
           textDirection: textDirection,
-          locale: locale,
+          locale: locale ?? this.locale,
           softWrap: softWrap,
           overflow: overflow,
           textScaler: textScaler,
@@ -139,7 +139,7 @@ extension TextTranslateExtension on Text {
           strutStyle: strutStyle,
           textAlign: textAlign,
           textDirection: textDirection,
-          locale: locale,
+          locale: locale ?? this.locale,
           softWrap: softWrap,
           overflow: overflow,
           textScaler: textScaler,
@@ -273,7 +273,7 @@ extension BuildContextLocalizationExtension on BuildContext {
   bool get isCurrentLocaleEnglish => currentLanguageCode == 'en';
 
   /// Returns true if the current locale is RTL (e.g., Arabic, Hebrew).
-  bool get isCurrentLocaleRtl => Bidi.hasAnyRtl(currentLanguageCode);
+  bool get isCurrentLocaleRtl => Bidi.isRtlLanguage(currentLanguageCode);
 
   /// Returns true if the current locale is LTR.
   bool get isCurrentLocaleLtr => !isCurrentLocaleRtl;

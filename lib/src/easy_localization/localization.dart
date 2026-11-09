@@ -18,7 +18,9 @@ class Localization {
   final _modifiers = <String, String Function(String?)>{
     'upper': (String? val) => val!.toUpperCase(),
     'lower': (String? val) => val!.toLowerCase(),
-    'capitalize': (String? val) => '${val![0].toUpperCase()}${val.substring(1)}'
+    'capitalize': (String? val) => val == null || val.isEmpty
+        ? ''
+        : '${val[0].toUpperCase()}${val.substring(1)}'
   };
 
   bool _useFallbackTranslationsForEmptyResources = false;
@@ -78,14 +80,14 @@ class Localization {
       res = _resolve(key, logging: logMissingKeys, locale: locale);
     }
 
-    res = _replaceLinks(res, logging: logMissingKeys);
+    res = _replaceLinks(res, logging: logMissingKeys, locale: locale);
 
     res = _replaceNamedArgs(res, namedArgs);
 
     return _replaceArgs(res, args);
   }
 
-  String _replaceLinks(String res, {bool logging = true}) {
+  String _replaceLinks(String res, {bool logging = true, Locale? locale}) {
     // TODO: add recursion detection and a resolve stack.
     final matches = _linkKeyMatcher.allMatches(res);
     var result = res;
@@ -100,7 +102,7 @@ class Localization {
       final linkPlaceholder =
           link.replaceAll(linkPrefix, '').replaceAll(_bracketsMatcher, '');
 
-      var translated = _resolve(linkPlaceholder);
+      var translated = _resolve(linkPlaceholder, locale: locale);
 
       if (formatterName != null) {
         if (_modifiers.containsKey(formatterName)) {
@@ -131,7 +133,7 @@ class Localization {
   String _replaceNamedArgs(String res, Map<String, String>? args) {
     if (args == null || args.isEmpty) return res;
     args.forEach((String key, String value) =>
-        res = res.replaceAll(RegExp('{$key}'), value));
+        res = res.replaceAll('{$key}', value));
     return res;
   }
 
