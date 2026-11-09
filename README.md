@@ -134,6 +134,13 @@ await PlayxLocalization.preloadLocales([const Locale('en'), const Locale('fr')])
 
 Preloaded locales stay loaded when the app locale changes. Locales that are not loaded return the key.
 
+### Where the Locale Is Saved
+With `saveLocale: true` (default) the selected locale is saved by its `XLocale.id` and restored on the next start, so changing the order of `supportedLocales` between app versions is safe. Locale ids must therefore be unique and stable.
+
+By default it is stored with SharedPreferencesAsync. To store it somewhere else, implement `PlayxLocaleStorage` and pass it as `PlayxLocaleConfig(storage: ...)`. `PlayxMemoryLocaleStorage` is handy in tests.
+
+Apps that used an older version are migrated automatically. Their saved index is read once and rewritten as an id.
+
 ### Note on iOS
 To enable translation on iOS devices, add supported locales to `ios/Runner/Info.plist` as described [here](https://flutter.dev/docs/development/accessibility-and-localization/internationalization#specifying-supportedlocales).
 

@@ -89,6 +89,12 @@ class PlayxLocaleConfig {
   final List<LocalizationsDelegate> Function(
       PlayxLocalizationDelegate delegate)? customLocalizationDelegateBuilder;
 
+  /// Where the selected locale is saved when [saveLocale] is true.
+  ///
+  /// Defaults to [PlayxPrefsLocaleStorage] (SharedPreferencesAsync). Provide
+  /// your own [PlayxLocaleStorage] to save it elsewhere.
+  final PlayxLocaleStorage storage;
+
   PlayxLocaleConfig({
     required this.supportedLocales,
     this.startLocale,
@@ -109,6 +115,7 @@ class PlayxLocaleConfig {
     this.logMissingKeys = false,
     this.logLocaleChanges = true,
     this.migratePrefsToAsync = false,
+    this.storage = const PlayxPrefsLocaleStorage(),
     this.extraDelegates,
     this.customLocalizationDelegateBuilder,
   })  : assert(path.isNotEmpty, 'path can not be empty'),

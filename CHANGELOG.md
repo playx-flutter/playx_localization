@@ -11,6 +11,10 @@
 - **`translate` option**: `tr` and `plural` (String, `Text` and `BuildContext` variants) accept `translate: false` to return the text as-is, still applying `args` / `namedArgs`.
 - **`preloadLocales`**: New `PlayxLocalization.preloadLocales` loads only the locales you need so `tr(locale: ...)` works for them without enabling `preloadSupportedLocales` for all locales.
 - `tr` with a `BuildContext` now falls back to the global instance when no `Localization` is found in the context, instead of throwing.
+- **Locale saved by id (with migration)**: The selected locale is now saved by its `XLocale.id` instead of its position in `supportedLocales`, so reordering, inserting or removing locales in an app update no longer restores the wrong language. Existing installs migrate automatically: a saved index is read when no id exists yet, then rewritten as an id (the index is still written, so downgrades keep working). A saved locale that was removed falls back to `startLocale` / the device locale instead of a different language. The device-sync flag (`-1`) keeps working.
+- **Pluggable storage**: Added `PlayxLocaleConfig.storage` with `PlayxLocaleStorage`, `PlayxPrefsLocaleStorage` (default) and `PlayxMemoryLocaleStorage`, like `playx_theme`. Writes are queued so the last requested locale is always the last one saved.
+- **`resetLocale` forgets the saved choice**: it now clears the saved locale and applies the fresh-install locale (`startLocale`, device, fallback) without saving it. Before, it saved that result as an explicit choice.
+- `getLastSavedIndexFromPrefs` is deprecated.
 - **Fix**: `config.useFallbackTranslations` was ignored; the fallback locale was always loaded. It is now respected.
 - **Fix**: A failed locale switch (for example a missing translation file) no longer wipes the loaded translations, changes the locale or saves it. `updateTo`, `updateById`, etc. now return `false` and keep the current locale. `loadTranslations` now returns a `bool`.
 - **Fix**: One missing or broken locale file no longer breaks `preloadSupportedLocales` for all locales.
