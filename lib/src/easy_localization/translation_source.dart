@@ -37,9 +37,9 @@ class PlayxTranslationSource {
     required this.path,
     AssetLoader? loader,
     this.namespace,
-  })  : assert(id.isNotEmpty, 'id can not be empty'),
-        assert(path.isNotEmpty, 'path can not be empty'),
-        loader = loader ?? RootBundleAssetLoader.fromRootBundle();
+  }) : assert(id.isNotEmpty, 'id can not be empty'),
+       assert(path.isNotEmpty, 'path can not be empty'),
+       loader = loader ?? RootBundleAssetLoader.fromRootBundle();
 
   /// Translations bundled as assets of another package.
   ///
@@ -73,7 +73,9 @@ class PlayxTranslationSource {
       locale,
       if (locale.scriptCode != null)
         Locale.fromSubtags(
-            languageCode: locale.languageCode, scriptCode: locale.scriptCode),
+          languageCode: locale.languageCode,
+          scriptCode: locale.scriptCode,
+        ),
       Locale(locale.languageCode),
     };
 
@@ -85,8 +87,9 @@ class PlayxTranslationSource {
         // Not available for this candidate, try the next one.
       }
     }
-    PlayxLocaleController.logger
-        ?.debug('Translation source "$id" has no translations for $locale');
+    PlayxLocaleController.logger?.debug(
+      'Translation source "$id" has no translations for $locale',
+    );
     return null;
   }
 

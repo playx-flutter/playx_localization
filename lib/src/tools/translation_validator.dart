@@ -34,17 +34,19 @@ Map<String, int> placeholdersOf(String value) {
 String _describe(Map<String, int> p) => p.isEmpty
     ? 'none'
     : (p.entries
-            .map((e) => '{${e.key}}${e.value > 1 ? ' x${e.value}' : ''}')
-            .toList()
-          ..sort())
-        .join(', ');
+              .map((e) => '{${e.key}}${e.value > 1 ? ' x${e.value}' : ''}')
+              .toList()
+            ..sort())
+          .join(', ');
 
 bool _samePlaceholders(Map<String, int> a, Map<String, int> b) =>
     a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
 
 /// Plural groups that lack the mandatory `other` form.
-List<String> _pluralGroupsWithoutOther(Map<String, dynamic> data,
-    [String prefix = '']) {
+List<String> _pluralGroupsWithoutOther(
+  Map<String, dynamic> data, [
+  String prefix = '',
+]) {
   final out = <String>[];
   data.forEach((key, value) {
     if (value is! Map<String, dynamic>) return;
@@ -62,8 +64,10 @@ List<String> _pluralGroupsWithoutOther(Map<String, dynamic> data,
 }
 
 /// Plural groups (`{"one": ..., "other": ...}`) by key path with their forms.
-Map<String, Set<String>> _pluralGroups(Map<String, dynamic> data,
-    [String prefix = '']) {
+Map<String, Set<String>> _pluralGroups(
+  Map<String, dynamic> data, [
+  String prefix = '',
+]) {
   final out = <String, Set<String>>{};
   data.forEach((key, value) {
     if (value is! Map<String, dynamic>) return;
@@ -93,33 +97,47 @@ List<ValidationIssue> validateTranslations({
     final flat = flattenTranslations(data);
 
     for (final key in _pluralGroupsWithoutOther(data)) {
-      issues.add(ValidationIssue(IssueSeverity.error, locale, key,
-          'plural group is missing the required "other" form'));
+      issues.add(
+        ValidationIssue(
+          IssueSeverity.error,
+          locale,
+          key,
+          'plural group is missing the required "other" form',
+        ),
+      );
     }
 
     // Forms the language needs, e.g. Arabic `few` and `many`. `zero` is
     // optional because it falls back to `other`.
     final language = locale.split(RegExp('[-_]')).first;
-    final needed = pluralCategoriesFor(language)
-        .map((c) => c.name.toLowerCase())
-        .toSet()
-      ..removeAll(const {'other', 'zero'});
+    final needed =
+        pluralCategoriesFor(language).map((c) => c.name.toLowerCase()).toSet()
+          ..removeAll(const {'other', 'zero'});
     _pluralGroups(data).forEach((path, forms) {
       final missing = needed.difference(forms);
       if (missing.isEmpty) return;
-      issues.add(ValidationIssue(
+      issues.add(
+        ValidationIssue(
           IssueSeverity.warning,
           locale,
           path,
           'plural group has no ${(missing.toList()..sort()).join(', ')} '
           'form, which the "$language" plural rules use '
-          '(it falls back to "other")'));
+          '(it falls back to "other")',
+        ),
+      );
     });
 
     for (final e in flat.entries) {
       if (e.value.trim().isEmpty) {
-        issues.add(ValidationIssue(
-            IssueSeverity.warning, locale, e.key, 'value is empty'));
+        issues.add(
+          ValidationIssue(
+            IssueSeverity.warning,
+            locale,
+            e.key,
+            'value is empty',
+          ),
+        );
       }
     }
 
@@ -127,26 +145,41 @@ List<ValidationIssue> validateTranslations({
 
     for (final key in base.keys) {
       if (!flat.containsKey(key)) {
-        issues.add(ValidationIssue(
-            IssueSeverity.error, locale, key, 'missing (present in $baseLocale)'));
+        issues.add(
+          ValidationIssue(
+            IssueSeverity.error,
+            locale,
+            key,
+            'missing (present in $baseLocale)',
+          ),
+        );
       }
     }
     for (final key in flat.keys) {
       if (!base.containsKey(key)) {
-        issues.add(ValidationIssue(IssueSeverity.warning, locale, key,
-            'not present in $baseLocale'));
+        issues.add(
+          ValidationIssue(
+            IssueSeverity.warning,
+            locale,
+            key,
+            'not present in $baseLocale',
+          ),
+        );
       }
     }
     for (final key in base.keys.where(flat.containsKey)) {
       final expected = placeholdersOf(base[key]!);
       final actual = placeholdersOf(flat[key]!);
       if (!_samePlaceholders(expected, actual)) {
-        issues.add(ValidationIssue(
+        issues.add(
+          ValidationIssue(
             IssueSeverity.error,
             locale,
             key,
             'placeholders differ from $baseLocale '
-            '(expected ${_describe(expected)}, found ${_describe(actual)})'));
+            '(expected ${_describe(expected)}, found ${_describe(actual)})',
+          ),
+        );
       }
     }
   }
@@ -164,7 +197,10 @@ List<String> findUnusedKeys(Iterable<String> keys, String srcDir) {
       .where((f) => f.path.endsWith('.dart'))
       .map((f) => f.readAsStringSync())
       // Skip files made by the key generator, they mention every key.
-      .where((s) => !s.contains('Generated by `dart run playx_localization:generate`'))
+      .where(
+        (s) =>
+            !s.contains('Generated by `dart run playx_localization:generate`'),
+      )
       .toList();
   final source = contents.join('\n');
 
@@ -193,8 +229,11 @@ the language uses (e.g. Arabic few/many).
 ''';
 
 /// Entry point of `validate`. Returns the process exit code.
-Future<int> runValidate(List<String> args,
-    {StringSink? out, StringSink? err}) async {
+Future<int> runValidate(
+  List<String> args, {
+  StringSink? out,
+  StringSink? err,
+}) async {
   out ??= stdout;
   err ??= stderr;
   final cli = CliArgs.parse(args, flagNames: {'strict', 'help'});
@@ -211,8 +250,10 @@ Future<int> runValidate(List<String> args,
     return 66;
   }
   if (!files.any((f) => f.locale == baseLocale)) {
-    err.writeln('Base locale "$baseLocale" not found in $dir '
-        '(found: ${files.map((f) => f.locale).join(', ')}). Use --base.');
+    err.writeln(
+      'Base locale "$baseLocale" not found in $dir '
+      '(found: ${files.map((f) => f.locale).join(', ')}). Use --base.',
+    );
     return 66;
   }
 
@@ -222,22 +263,37 @@ Future<int> runValidate(List<String> args,
     try {
       loaded[file.locale] = await file.load();
     } on FormatException catch (e) {
-      issues.add(ValidationIssue(IssueSeverity.error, file.locale, '',
-          'invalid JSON (${e.message})'));
+      issues.add(
+        ValidationIssue(
+          IssueSeverity.error,
+          file.locale,
+          '',
+          'invalid JSON (${e.message})',
+        ),
+      );
     } catch (e) {
-      issues.add(ValidationIssue(
-          IssueSeverity.error, file.locale, '', e.toString()));
+      issues.add(
+        ValidationIssue(IssueSeverity.error, file.locale, '', e.toString()),
+      );
     }
   }
 
   if (loaded.containsKey(baseLocale)) {
-    issues.addAll(validateTranslations(baseLocale: baseLocale, locales: loaded));
+    issues.addAll(
+      validateTranslations(baseLocale: baseLocale, locales: loaded),
+    );
     final src = cli['src'];
     if (src != null) {
       final base = flattenTranslations(loaded[baseLocale]!);
       for (final key in findUnusedKeys(base.keys, src)) {
-        issues.add(ValidationIssue(
-            IssueSeverity.warning, baseLocale, key, 'unused in $src'));
+        issues.add(
+          ValidationIssue(
+            IssueSeverity.warning,
+            baseLocale,
+            key,
+            'unused in $src',
+          ),
+        );
       }
     }
   }
@@ -247,8 +303,9 @@ Future<int> runValidate(List<String> args,
   }
   final errors = issues.where((i) => i.severity == IssueSeverity.error).length;
   final warnings = issues.length - errors;
-  out.writeln('Checked ${files.length} locales: $errors errors, $warnings warnings.');
+  out.writeln(
+    'Checked ${files.length} locales: $errors errors, $warnings warnings.',
+  );
 
   return errors > 0 || (cli.has('strict') && warnings > 0) ? 1 : 0;
 }
-

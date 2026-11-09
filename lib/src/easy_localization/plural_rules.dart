@@ -554,7 +554,7 @@ final pluralRules = {
   'zh_HK': _default_rule,
   'zh_TW': _default_rule,
   'zu': _hi_rule,
-  'default': _default_rule
+  'default': _default_rule,
 };
 
 /// Do we have plural rules specific to [locale]

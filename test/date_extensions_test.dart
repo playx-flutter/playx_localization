@@ -14,7 +14,11 @@ void main() {
 
     const de = XLocale(id: 'de', name: 'Deutsch', languageCode: 'de');
     const deAT = XLocale(
-        id: 'de_at', name: 'Österreich', languageCode: 'de', countryCode: 'AT');
+      id: 'de_at',
+      name: 'Österreich',
+      languageCode: 'de',
+      countryCode: 'AT',
+    );
     final date = DateTime(2024, 1, 15, 9, 30);
 
     Future<void> bootWith(XLocale locale) async {

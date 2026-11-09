@@ -23,9 +23,7 @@ final data = {
     'hello': 'مرحبا {name}',
     'item': {'one': '{} عنصر', 'other': '{} عناصر'},
   },
-  'fr': {
-    'title': 'Titre',
-  },
+  'fr': {'title': 'Titre'},
 };
 
 Future<PlayxLocaleController> boot({XLocale start = ar}) async {
@@ -61,8 +59,10 @@ void main() {
 
     test('still applies args and named args', () async {
       await boot();
-      expect('Hi {name}'.tr(translate: false, namedArgs: {'name': 'Sam'}),
-          'Hi Sam');
+      expect(
+        'Hi {name}'.tr(translate: false, namedArgs: {'name': 'Sam'}),
+        'Hi Sam',
+      );
       expect('{} and {}'.tr(translate: false, args: ['a', 'b']), 'a and b');
     });
 

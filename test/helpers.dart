@@ -13,10 +13,10 @@ class MemoryAssetLoader extends AssetLoader {
   final Map<String, Map<String, dynamic>> data;
 
   MemoryAssetLoader(this.data)
-      : super(
-          fileLoader: _NoFiles(),
-          linkedFileResolver: JsonLinkedFileResolver(fileLoader: _NoFiles()),
-        );
+    : super(
+        fileLoader: _NoFiles(),
+        linkedFileResolver: JsonLinkedFileResolver(fileLoader: _NoFiles()),
+      );
 
   @override
   Future<Map<String, dynamic>?> load(String path, Locale locale) async {

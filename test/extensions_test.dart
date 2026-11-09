@@ -37,12 +37,17 @@ void main() {
     test('toLocale', () {
       expect('en'.toLocale(), const Locale('en'));
       expect('en_US'.toLocale(), const Locale('en', 'US'));
-      expect('zh_Hant'.toLocale(),
-          const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'));
+      expect(
+        'zh_Hant'.toLocale(),
+        const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+      );
       expect(
         'zh_Hant_TW'.toLocale(),
         const Locale.fromSubtags(
-            languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW'),
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+          countryCode: 'TW',
+        ),
       );
       expect('en-US'.toLocale(separator: '-'), const Locale('en', 'US'));
     });
@@ -64,11 +69,15 @@ void main() {
   group('Locale extensions', () {
     test('supports', () {
       expect(const Locale('en').supports(const Locale('en', 'US')), isTrue);
-      expect(const Locale('en', 'US').supports(const Locale('en', 'GB')),
-          isFalse);
+      expect(
+        const Locale('en', 'US').supports(const Locale('en', 'GB')),
+        isFalse,
+      );
       expect(const Locale('en').supports(const Locale('ar')), isFalse);
-      expect(const Locale('en', 'US').supports(const Locale('en', 'US')),
-          isTrue);
+      expect(
+        const Locale('en', 'US').supports(const Locale('en', 'US')),
+        isTrue,
+      );
     });
 
     test('supports respects scriptCode', () {
@@ -82,21 +91,27 @@ void main() {
     test('toStringWithSeparator', () {
       expect(const Locale('en').toStringWithSeparator(), 'en');
       expect(const Locale('en', 'US').toStringWithSeparator(), 'en-US');
-      expect(const Locale('en', 'US').toStringWithSeparator(separator: '_'),
-          'en_US');
+      expect(
+        const Locale('en', 'US').toStringWithSeparator(separator: '_'),
+        'en_US',
+      );
     });
 
     test('XLocale.locale builds locale with scriptCode', () {
       const x = XLocale(
-          id: 'zh',
-          name: 'Chinese',
-          languageCode: 'zh',
-          scriptCode: 'Hant',
-          countryCode: 'TW');
+        id: 'zh',
+        name: 'Chinese',
+        languageCode: 'zh',
+        scriptCode: 'Hant',
+        countryCode: 'TW',
+      );
       expect(
         x.locale,
         const Locale.fromSubtags(
-            languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW'),
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+          countryCode: 'TW',
+        ),
       );
       const plain = XLocale(id: 'en', name: 'English', languageCode: 'en');
       expect(plain.locale, const Locale('en'));

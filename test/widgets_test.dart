@@ -7,7 +7,11 @@ import 'package:playx_localization/src/easy_localization/localization.dart';
 import 'helpers.dart';
 
 const en = XLocale(
-    id: 'en', name: 'English', languageCode: 'en', fontFamily: 'Roboto');
+  id: 'en',
+  name: 'English',
+  languageCode: 'en',
+  fontFamily: 'Roboto',
+);
 const ar = XLocale(id: 'ar', name: 'Arabic', languageCode: 'ar');
 
 final data = {
@@ -39,11 +43,11 @@ Future<PlayxLocaleController> boot({XLocale start = en}) async {
 }
 
 Widget app(Widget Function(BuildContext) build) => Directionality(
-      textDirection: TextDirection.ltr,
-      child: PlayxLocalizationBuilder(
-        builder: (context, xLocale) => Builder(builder: build),
-      ),
-    );
+  textDirection: TextDirection.ltr,
+  child: PlayxLocalizationBuilder(
+    builder: (context, xLocale) => Builder(builder: build),
+  ),
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -60,14 +64,17 @@ void main() {
     expect(find.text('Title'), findsNothing);
   });
 
-  testWidgets('builder rebuilds after translations are reloaded',
-      (tester) async {
+  testWidgets('builder rebuilds after translations are reloaded', (
+    tester,
+  ) async {
     final c = await boot();
     var builds = 0;
-    await tester.pumpWidget(app((context) {
-      builds++;
-      return Text(context.tr('title'));
-    }));
+    await tester.pumpWidget(
+      app((context) {
+        builds++;
+        return Text(context.tr('title'));
+      }),
+    );
     await tester.pumpAndSettle();
     final before = builds;
     await tester.runAsync(c.reloadTranslations);
@@ -78,10 +85,12 @@ void main() {
   testWidgets('context helpers', (tester) async {
     await boot(start: ar);
     late BuildContext ctx;
-    await tester.pumpWidget(app((context) {
-      ctx = context;
-      return const SizedBox();
-    }));
+    await tester.pumpWidget(
+      app((context) {
+        ctx = context;
+        return const SizedBox();
+      }),
+    );
     await tester.pumpAndSettle();
 
     expect(ctx.currentXLocale, ar);
@@ -99,10 +108,12 @@ void main() {
   testWidgets('font family comes from the XLocale', (tester) async {
     await boot();
     late BuildContext ctx;
-    await tester.pumpWidget(app((context) {
-      ctx = context;
-      return const SizedBox();
-    }));
+    await tester.pumpWidget(
+      app((context) {
+        ctx = context;
+        return const SizedBox();
+      }),
+    );
     await tester.pumpAndSettle();
     expect(ctx.fontFamily, 'Roboto');
   });
@@ -110,10 +121,12 @@ void main() {
   testWidgets('context.tr and context.plural', (tester) async {
     await boot();
     late BuildContext ctx;
-    await tester.pumpWidget(app((context) {
-      ctx = context;
-      return const SizedBox();
-    }));
+    await tester.pumpWidget(
+      app((context) {
+        ctx = context;
+        return const SizedBox();
+      }),
+    );
     await tester.pumpAndSettle();
 
     expect(ctx.tr('title'), 'Title');
@@ -135,10 +148,14 @@ void main() {
   testWidgets('context.tr throws without a Localization', (tester) async {
     await boot();
     late BuildContext ctx;
-    await tester.pumpWidget(Builder(builder: (context) {
-      ctx = context;
-      return const SizedBox();
-    }));
+    await tester.pumpWidget(
+      Builder(
+        builder: (context) {
+          ctx = context;
+          return const SizedBox();
+        },
+      ),
+    );
     expect(() => ctx.tr('title'), throwsException);
     expect(() => ctx.plural('item', 1), throwsException);
     expect(() => ctx.currentXLocale, throwsException);
@@ -152,14 +169,15 @@ void main() {
     expect(host(ar).updateShouldNotify(host(en)), isTrue);
   });
 
-  testWidgets('Localization.of finds the delegate in the tree',
-      (tester) async {
+  testWidgets('Localization.of finds the delegate in the tree', (tester) async {
     await boot();
     late BuildContext ctx;
-    await tester.pumpWidget(app((context) {
-      ctx = context;
-      return const SizedBox();
-    }));
+    await tester.pumpWidget(
+      app((context) {
+        ctx = context;
+        return const SizedBox();
+      }),
+    );
     await tester.pumpAndSettle();
     expect(Localization.of(ctx), isNotNull);
     expect(Localization.of(ctx)!.tr('title'), 'Title');
@@ -184,7 +202,9 @@ void main() {
         ),
       );
       final d = PlayxLocalizationDelegate(
-          localizationController: c, supportedLocales: const [en, ar]);
+        localizationController: c,
+        supportedLocales: const [en, ar],
+      );
       expect(c.translations, isNull);
 
       final localization = await d.load(const Locale('ar'));
@@ -202,7 +222,9 @@ void main() {
         ),
       );
       final d = PlayxLocalizationDelegate(
-          localizationController: c, supportedLocales: const [en]);
+        localizationController: c,
+        supportedLocales: const [en],
+      );
       expect(() => d.load(const Locale('de')), throwsUnsupportedError);
     });
   });

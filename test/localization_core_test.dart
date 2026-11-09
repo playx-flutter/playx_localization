@@ -29,7 +29,7 @@ final data = {
       'zero': 'none',
       'one': 'one',
       'two': 'two',
-      'other': 'many {}'
+      'other': 'many {}',
     },
   },
   'ar': {
@@ -122,8 +122,7 @@ void main() {
       expect('empty_in_ar_only'.tr(), 'English text');
     });
 
-    test('empty values are kept when fallback for empty is disabled',
-        () async {
+    test('empty values are kept when fallback for empty is disabled', () async {
       await boot(start: ar);
       expect('empty_in_ar_only'.tr(), '');
     });
@@ -153,8 +152,10 @@ void main() {
       await boot();
       expect('named_plural'.plural(1, name: 'n'), '1 apple');
       expect('named_plural'.plural(3, name: 'n'), '3 apples');
-      expect('numbers'.plural(1000, format: NumberFormat.decimalPattern('en')),
-          '1,000 things');
+      expect(
+        'numbers'.plural(1000, format: NumberFormat.decimalPattern('en')),
+        '1,000 things',
+      );
       expect('named_plural'.plural(2, namedArgs: {'n': 'two'}), 'two apples');
       expect('zero_plural'.plural(5, args: ['five']), 'many five');
     });
@@ -183,6 +184,5 @@ void main() {
       await boot(ignorePluralRules: false);
       expect('numbers'.plural(1), '1 thing');
     });
-
   });
 }

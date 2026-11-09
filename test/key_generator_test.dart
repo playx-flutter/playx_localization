@@ -40,11 +40,16 @@ void main() {
       });
     });
 
-    test('a group with other keys next to plural forms is not a plural group',
-        () {
-      expect(isPluralGroup({'one': 'a', 'other': 'b', 'title': 'c'}), isFalse);
-      expect(isPluralGroup({'one': 'a'}), isFalse);
-    });
+    test(
+      'a group with other keys next to plural forms is not a plural group',
+      () {
+        expect(
+          isPluralGroup({'one': 'a', 'other': 'b', 'title': 'c'}),
+          isFalse,
+        );
+        expect(isPluralGroup({'one': 'a'}), isFalse);
+      },
+    );
   });
 
   group('generateKeysSource', () {
@@ -61,9 +66,11 @@ void main() {
 
     test('suffixes colliding names and warns', () {
       final warnings = <String>[];
-      final src = generateKeysSource(
-          {'a_b': '1', 'a.b': '2', 'aB': '3'},
-          warnings: warnings);
+      final src = generateKeysSource({
+        'a_b': '1',
+        'a.b': '2',
+        'aB': '3',
+      }, warnings: warnings);
       expect(src, contains("static const aB = 'a_b';"));
       expect(src, contains("static const aB2 = 'a.b';"));
       expect(src, contains("static const aB3 = 'aB';"));
@@ -83,49 +90,67 @@ void main() {
 
     String p(String name) => '${dir.path}${Platform.pathSeparator}$name';
 
-    test('writes the file, resolving linked files, and --check passes',
-        () async {
-      Directory(p('en')).createSync();
-      File(p('en/auth.json')).writeAsStringSync(json.encode({'login': 'Login'}));
-      File(p('en.json')).writeAsStringSync(
-          json.encode({'title': 'T', 'auth': ':/auth.json'}));
-      final out = StringBuffer();
+    test(
+      'writes the file, resolving linked files, and --check passes',
+      () async {
+        Directory(p('en')).createSync();
+        File(
+          p('en/auth.json'),
+        ).writeAsStringSync(json.encode({'login': 'Login'}));
+        File(
+          p('en.json'),
+        ).writeAsStringSync(json.encode({'title': 'T', 'auth': ':/auth.json'}));
+        final out = StringBuffer();
 
-      final code = await runGenerate([
-        '--source', p('en.json'),
-        '--output', p('gen/app_trans.dart'),
-        '--class', 'AppTrans',
-      ], out: out);
-      expect(code, 0);
+        final code = await runGenerate([
+          '--source',
+          p('en.json'),
+          '--output',
+          p('gen/app_trans.dart'),
+          '--class',
+          'AppTrans',
+        ], out: out);
+        expect(code, 0);
 
-      final generated = File(p('gen/app_trans.dart')).readAsStringSync();
-      expect(generated, contains("static const title = 'title';"));
-      expect(generated, contains("static const authLogin = 'auth.login';"));
+        final generated = File(p('gen/app_trans.dart')).readAsStringSync();
+        expect(generated, contains("static const title = 'title';"));
+        expect(generated, contains("static const authLogin = 'auth.login';"));
 
-      final check = await runGenerate([
-        '--source', p('en.json'),
-        '--output', p('gen/app_trans.dart'),
-        '--check',
-      ], out: out);
-      expect(check, 0);
-    });
+        final check = await runGenerate([
+          '--source',
+          p('en.json'),
+          '--output',
+          p('gen/app_trans.dart'),
+          '--check',
+        ], out: out);
+        expect(check, 0);
+      },
+    );
 
     test('--check fails when stale or missing', () async {
       File(p('en.json')).writeAsStringSync(json.encode({'a': '1'}));
       final err = StringBuffer();
       expect(
         await runGenerate(
-            ['--source', p('en.json'), '--output', p('o.dart'), '--check'],
-            out: StringBuffer(), err: err),
+          ['--source', p('en.json'), '--output', p('o.dart'), '--check'],
+          out: StringBuffer(),
+          err: err,
+        ),
         1,
       );
-      await runGenerate(['--source', p('en.json'), '--output', p('o.dart')],
-          out: StringBuffer());
+      await runGenerate([
+        '--source',
+        p('en.json'),
+        '--output',
+        p('o.dart'),
+      ], out: StringBuffer());
       File(p('en.json')).writeAsStringSync(json.encode({'a': '1', 'b': '2'}));
       expect(
         await runGenerate(
-            ['--source', p('en.json'), '--output', p('o.dart'), '--check'],
-            out: StringBuffer(), err: err),
+          ['--source', p('en.json'), '--output', p('o.dart'), '--check'],
+          out: StringBuffer(),
+          err: err,
+        ),
         1,
       );
     });
@@ -133,13 +158,21 @@ void main() {
     test('reports errors for missing source and bad class name', () async {
       final err = StringBuffer();
       expect(
-          await runGenerate(['--source', p('nope.json')],
-              out: StringBuffer(), err: err),
-          66);
+        await runGenerate(
+          ['--source', p('nope.json')],
+          out: StringBuffer(),
+          err: err,
+        ),
+        66,
+      );
       expect(
-          await runGenerate(['--source', p('nope.json'), '--class', '1bad'],
-              out: StringBuffer(), err: err),
-          64);
+        await runGenerate(
+          ['--source', p('nope.json'), '--class', '1bad'],
+          out: StringBuffer(),
+          err: err,
+        ),
+        64,
+      );
     });
 
     test('--help prints usage', () async {

@@ -41,7 +41,8 @@ extension NumExtensions on num {
     String? locale,
     String? currencySymbol,
   }) {
-    final formatLocale = locale ??
+    final formatLocale =
+        locale ??
         (PlayxLocalization.isCurrentLocaleArabic()
             ? 'ar_EG'
             : PlayxLocalization.currentLocale.toLanguageTag());
@@ -57,10 +58,7 @@ extension NumExtensions on num {
   /// ```dart
   /// 1234.56.toFormattedNumber(format: "#,##0.0", locale: "en_US"); // → 1,234.6
   /// ```
-  String toFormattedNumber({
-    required String format,
-    String locale = 'en',
-  }) {
+  String toFormattedNumber({required String format, String locale = 'en'}) {
     final numberFormat = NumberFormat(format, locale);
     return numberFormat.format(this);
   }
@@ -97,10 +95,7 @@ extension NumExtensions on num {
   /// Formats the number according to the given or current locale and format.
   ///
   /// If [locale] is not provided, it uses the current locale from [PlayxLocalization].
-  String toLocalizedNumber({
-    String? locale,
-    String format = '#.##',
-  }) {
+  String toLocalizedNumber({String? locale, String format = '#.##'}) {
     final formatLocale =
         locale ?? PlayxLocalization.currentLocale.toLanguageTag();
     return NumberFormat(format, formatLocale).format(this);

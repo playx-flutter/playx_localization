@@ -20,14 +20,17 @@ void main() {
   JsonLinkedFileResolver resolverFor(Map<String, Object> files) =>
       JsonLinkedFileResolver(
         fileLoader: FakeFileLoader(
-            files.map((k, v) => MapEntry(k, json.encode(v)))),
+          files.map((k, v) => MapEntry(k, json.encode(v))),
+        ),
       );
 
   test('getLinkedLocalePath with and without country', () {
     final r = resolverFor({});
     expect(r.getLinkedLocalePath('assets', 'a.json', 'en'), 'assets/en/a.json');
-    expect(r.getLinkedLocalePath('assets', 'a.json', 'en', countryCode: 'US'),
-        'assets/en-US/a.json');
+    expect(
+      r.getLinkedLocalePath('assets', 'a.json', 'en', countryCode: 'US'),
+      'assets/en-US/a.json',
+    );
   });
 
   test('returns plain json unchanged', () async {
@@ -36,12 +39,12 @@ void main() {
       languageCode: 'en',
       baseJson: {
         'a': 'b',
-        'n': {'c': 'd'}
+        'n': {'c': 'd'},
       },
     );
     expect(result, {
       'a': 'b',
-      'n': {'c': 'd'}
+      'n': {'c': 'd'},
     });
   });
 
@@ -56,20 +59,24 @@ void main() {
     };
     expect(
       await r.resolveLinkedFiles(
-          basePath: 'assets', languageCode: 'en', baseJson: base),
+        basePath: 'assets',
+        languageCode: 'en',
+        baseJson: base,
+      ),
       {
         'auth': {'login': 'Login'},
         'group': {
-          'inner': {'login': 'Login'}
+          'inner': {'login': 'Login'},
         },
       },
     );
     expect(
       (await r.resolveLinkedFiles(
-          basePath: 'assets',
-          languageCode: 'en',
-          countryCode: 'US',
-          baseJson: base))['auth'],
+        basePath: 'assets',
+        languageCode: 'en',
+        countryCode: 'US',
+        baseJson: base,
+      ))['auth'],
       {'login': 'Sign in'},
     );
   });
@@ -80,18 +87,24 @@ void main() {
       'assets/en/b.json': {'k': 'v'},
     });
     final result = await r.resolveLinkedFiles(
-        basePath: 'assets', languageCode: 'en', baseJson: {'a': ':/a.json'});
+      basePath: 'assets',
+      languageCode: 'en',
+      baseJson: {'a': ':/a.json'},
+    );
     expect(result, {
       'a': {
-        'b': {'k': 'v'}
-      }
+        'b': {'k': 'v'},
+      },
     });
   });
 
   test('throws on missing linked file', () async {
     expect(
       resolverFor({}).resolveLinkedFiles(
-          basePath: 'assets', languageCode: 'en', baseJson: {'a': ':/x.json'}),
+        basePath: 'assets',
+        languageCode: 'en',
+        baseJson: {'a': ':/x.json'},
+      ),
       throwsStateError,
     );
   });
@@ -103,7 +116,10 @@ void main() {
     });
     expect(
       r.resolveLinkedFiles(
-          basePath: 'assets', languageCode: 'en', baseJson: {'a': ':/a.json'}),
+        basePath: 'assets',
+        languageCode: 'en',
+        baseJson: {'a': ':/a.json'},
+      ),
       throwsStateError,
     );
   });

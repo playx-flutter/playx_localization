@@ -11,7 +11,7 @@ class MapFileLoader implements FileLoader {
   final Map<String, String> files;
   final List<String> requested = [];
   MapFileLoader(Map<String, Object> data)
-      : files = data.map((k, v) => MapEntry(k, json.encode(v)));
+    : files = data.map((k, v) => MapEntry(k, json.encode(v)));
 
   @override
   Future<String> loadString(String path) async {
@@ -23,12 +23,15 @@ class MapFileLoader implements FileLoader {
 }
 
 RootBundleAssetLoader loaderFor(MapFileLoader f) => RootBundleAssetLoader(
-      fileLoader: f,
-      linkedFileResolver: JsonLinkedFileResolver(fileLoader: f),
-    );
+  fileLoader: f,
+  linkedFileResolver: JsonLinkedFileResolver(fileLoader: f),
+);
 
 const hantTW = Locale.fromSubtags(
-    languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW');
+  languageCode: 'zh',
+  scriptCode: 'Hant',
+  countryCode: 'TW',
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -78,25 +81,29 @@ void main() {
 
     test('plain locales are unaffected', () async {
       final f = MapFileLoader({
-        'a/en-US.json': {'k': 'v'}
+        'a/en-US.json': {'k': 'v'},
       });
       expect(
-          (await loaderFor(f).load('a', const Locale('en', 'US')))!['k'], 'v');
+        (await loaderFor(f).load('a', const Locale('en', 'US')))!['k'],
+        'v',
+      );
       expect(f.requested, ['a/en-US.json']);
     });
 
-    test('linked files use the script folder, then the legacy folder',
-        () async {
-      final f = MapFileLoader({
-        'a/zh-Hant-TW.json': {'auth': ':/auth.json', 'other': ':/other.json'},
-        'a/zh-Hant-TW/auth.json': {'login': 'new'},
-        // Only exists in the old folder layout (script ignored).
-        'a/zh-TW/other.json': {'x': 'old'},
-      });
-      final result = (await loaderFor(f).load('a', hantTW))!;
-      expect(result['auth'], {'login': 'new'});
-      expect(result['other'], {'x': 'old'});
-    });
+    test(
+      'linked files use the script folder, then the legacy folder',
+      () async {
+        final f = MapFileLoader({
+          'a/zh-Hant-TW.json': {'auth': ':/auth.json', 'other': ':/other.json'},
+          'a/zh-Hant-TW/auth.json': {'login': 'new'},
+          // Only exists in the old folder layout (script ignored).
+          'a/zh-TW/other.json': {'x': 'old'},
+        });
+        final result = (await loaderFor(f).load('a', hantTW))!;
+        expect(result['auth'], {'login': 'new'});
+        expect(result['other'], {'x': 'old'});
+      },
+    );
   });
 
   group('JsonLinkedFileResolver paths', () {
@@ -104,15 +111,24 @@ void main() {
 
     test('getLinkedLocalePath', () {
       expect(
-          r.getLinkedLocalePath('a', 'f.json', 'zh',
-              scriptCode: 'Hant', countryCode: 'TW'),
-          'a/zh-Hant-TW/f.json');
-      expect(r.getLinkedLocalePath('a', 'f.json', 'en', countryCode: 'US'),
-          'a/en-US/f.json');
+        r.getLinkedLocalePath(
+          'a',
+          'f.json',
+          'zh',
+          scriptCode: 'Hant',
+          countryCode: 'TW',
+        ),
+        'a/zh-Hant-TW/f.json',
+      );
+      expect(
+        r.getLinkedLocalePath('a', 'f.json', 'en', countryCode: 'US'),
+        'a/en-US/f.json',
+      );
       expect(r.getLinkedLocalePath('a', 'f.json', 'en'), 'a/en/f.json');
       expect(
-          r.getLegacyLinkedLocalePath('a', 'f.json', 'zh', countryCode: 'TW'),
-          'a/zh-TW/f.json');
+        r.getLegacyLinkedLocalePath('a', 'f.json', 'zh', countryCode: 'TW'),
+        'a/zh-TW/f.json',
+      );
     });
   });
 

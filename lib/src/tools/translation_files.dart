@@ -21,8 +21,13 @@ class TranslationFile {
   final String? scriptCode;
   final String? countryCode;
 
-  TranslationFile._(this.locale, this.path, this.languageCode, this.scriptCode,
-      this.countryCode);
+  TranslationFile._(
+    this.locale,
+    this.path,
+    this.languageCode,
+    this.scriptCode,
+    this.countryCode,
+  );
 
   factory TranslationFile.fromPath(String path) {
     final name = path.split(Platform.pathSeparator).last;
@@ -63,8 +68,9 @@ class TranslationFile {
     if (decoded is! Map<String, dynamic>) {
       throw FormatException('$path must contain a JSON object.');
     }
-    return const JsonLinkedFileResolver(fileLoader: DiskFileLoader())
-        .resolveLinkedFiles(
+    return const JsonLinkedFileResolver(
+      fileLoader: DiskFileLoader(),
+    ).resolveLinkedFiles(
       basePath: directory,
       languageCode: languageCode,
       countryCode: countryCode,
@@ -78,13 +84,14 @@ class TranslationFile {
 List<TranslationFile> findTranslationFiles(String dir) {
   final d = Directory(dir);
   if (!d.existsSync()) return [];
-  final files = d
-      .listSync()
-      .whereType<File>()
-      .where((f) => f.path.endsWith('.json'))
-      .map((f) => TranslationFile.fromPath(f.path))
-      .toList()
-    ..sort((a, b) => a.locale.compareTo(b.locale));
+  final files =
+      d
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.json'))
+          .map((f) => TranslationFile.fromPath(f.path))
+          .toList()
+        ..sort((a, b) => a.locale.compareTo(b.locale));
   return files;
 }
 
@@ -99,8 +106,10 @@ bool isPluralGroup(Map<String, dynamic> map) =>
 
 /// Flattens nested translations into `dotted.key -> value`.
 /// Plural groups are kept as a single entry whose value is the `other` form.
-Map<String, String> flattenTranslations(Map<String, dynamic> data,
-    {String prefix = ''}) {
+Map<String, String> flattenTranslations(
+  Map<String, dynamic> data, {
+  String prefix = '',
+}) {
   final out = <String, String>{};
   data.forEach((key, value) {
     final path = prefix.isEmpty ? key : '$prefix.$key';

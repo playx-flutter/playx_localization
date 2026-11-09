@@ -24,8 +24,10 @@ abstract class AssetLoader {
   final FileLoader fileLoader;
   final LinkedFileResolver linkedFileResolver;
 
-  const AssetLoader(
-      {required this.linkedFileResolver, required this.fileLoader});
+  const AssetLoader({
+    required this.linkedFileResolver,
+    required this.fileLoader,
+  });
 
   Future<Map<String, dynamic>?> load(String path, Locale locale);
 }
@@ -34,13 +36,16 @@ abstract class AssetLoader {
 /// default used is RootBundleAssetLoader which uses flutter's assetloader
 ///
 class RootBundleAssetLoader extends AssetLoader {
-  const RootBundleAssetLoader(
-      {required super.linkedFileResolver, required super.fileLoader});
+  const RootBundleAssetLoader({
+    required super.linkedFileResolver,
+    required super.fileLoader,
+  });
 
   factory RootBundleAssetLoader.fromRootBundle() {
     return const RootBundleAssetLoader(
-      linkedFileResolver:
-          JsonLinkedFileResolver(fileLoader: RootBundleFileLoader()),
+      linkedFileResolver: JsonLinkedFileResolver(
+        fileLoader: RootBundleFileLoader(),
+      ),
       fileLoader: RootBundleFileLoader(),
     );
   }
@@ -77,7 +82,8 @@ class RootBundleAssetLoader extends AssetLoader {
       if (legacyPath == localePath) rethrow;
       content = await fileLoader.loadString(legacyPath);
       PlayxLocaleController.logger?.warning(
-          'Loaded $legacyPath. Rename it to $localePath, the old name order will be removed in a future version.');
+        'Loaded $legacyPath. Rename it to $localePath, the old name order will be removed in a future version.',
+      );
     }
 
     Map<String, dynamic> baseJson = json.decode(content);

@@ -98,9 +98,10 @@ extension LocalizationStringExtensions on String {
 
   /// Normalizes Arabic characters like Alef forms to a standard form.
   String normalizeArabicLetters() {
-    return replaceAll(RegExp('[إأآٱ]'), 'ا')
-        .replaceAll('ى', 'ي')
-        .replaceAll('ة', 'ه');
+    return replaceAll(
+      RegExp('[إأآٱ]'),
+      'ا',
+    ).replaceAll('ى', 'ي').replaceAll('ة', 'ه');
   }
 
   /// Removes redundant spaces from the string.
@@ -113,7 +114,8 @@ extension LocalizationStringExtensions on String {
     final localeList = split(separator);
     switch (localeList.length) {
       case 2:
-        return localeList.last.length == 4 // scriptCode length is 4
+        return localeList.last.length ==
+                4 // scriptCode length is 4
             ? Locale.fromSubtags(
                 languageCode: localeList.first,
                 scriptCode: localeList.last,

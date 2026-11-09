@@ -24,8 +24,12 @@ abstract class LinkedFileResolver {
   /// Path of a linked file inside the folder of the locale:
   /// `base/language[-script][-country]/file`.
   String getLinkedLocalePath(
-      String basePath, String filePath, String languageCode,
-      {String? countryCode, String? scriptCode}) {
+    String basePath,
+    String filePath,
+    String languageCode, {
+    String? countryCode,
+    String? scriptCode,
+  }) {
     final folder = [
       languageCode,
       if (scriptCode != null && scriptCode.isNotEmpty) scriptCode,
@@ -37,10 +41,16 @@ abstract class LinkedFileResolver {
   /// Path used before 0.5.0, which ignored the script code
   /// (`base/language[-country]/file`). Only differs when [scriptCode] is set.
   String getLegacyLinkedLocalePath(
-          String basePath, String filePath, String languageCode,
-          {String? countryCode}) =>
-      getLinkedLocalePath(basePath, filePath, languageCode,
-          countryCode: countryCode);
+    String basePath,
+    String filePath,
+    String languageCode, {
+    String? countryCode,
+  }) => getLinkedLocalePath(
+    basePath,
+    filePath,
+    languageCode,
+    countryCode: countryCode,
+  );
 }
 
 class JsonLinkedFileResolver extends LinkedFileResolver {
@@ -60,7 +70,8 @@ class JsonLinkedFileResolver extends LinkedFileResolver {
 
     if (depth > maxLinkedDepth) {
       throw StateError(
-          'Maximum linked files depth ($maxLinkedDepth) exceeded for $languageCode at $basePath.');
+        'Maximum linked files depth ($maxLinkedDepth) exceeded for $languageCode at $basePath.',
+      );
     }
 
     final Map<String, dynamic> fullJson = Map<String, dynamic>.from(baseJson);
@@ -72,16 +83,24 @@ class JsonLinkedFileResolver extends LinkedFileResolver {
       if (value is String && value.startsWith(':/')) {
         final rawPath = value.substring(2).trim();
         final linkedAssetPath = getLinkedLocalePath(
-            basePath, rawPath, languageCode,
-            countryCode: countryCode, scriptCode: scriptCode);
+          basePath,
+          rawPath,
+          languageCode,
+          countryCode: countryCode,
+          scriptCode: scriptCode,
+        );
         // Folders of locales with a script code used to ignore the script.
         final legacyAssetPath = getLegacyLinkedLocalePath(
-            basePath, rawPath, languageCode,
-            countryCode: countryCode);
+          basePath,
+          rawPath,
+          languageCode,
+          countryCode: countryCode,
+        );
 
         if (visited.contains(linkedAssetPath)) {
           throw StateError(
-              'Cyclic linked files detected at "$linkedAssetPath" (key: "$key").');
+            'Cyclic linked files detected at "$linkedAssetPath" (key: "$key").',
+          );
         }
 
         try {

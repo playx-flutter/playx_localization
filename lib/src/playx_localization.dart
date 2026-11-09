@@ -20,9 +20,7 @@ abstract class PlayxLocalization {
   ///Setup the current app locales with your configuration.
   ///And loads app supported translations.
   /// Must be called before calling any other method to initialize dependencies.
-  static Future<void> boot({
-    required PlayxLocaleConfig config,
-  }) async {
+  static Future<void> boot({required PlayxLocaleConfig config}) async {
     WidgetsFlutterBinding.ensureInitialized();
     final controller = PlayxLocaleController(config: config);
     return controller.boot();
@@ -36,7 +34,9 @@ abstract class PlayxLocalization {
   /// keys from registered sources. See [PlayxTranslationSource].
   ///
   /// Registering a source with an existing id replaces the previous one.
-  static Future<void> registerTranslations(PlayxTranslationSource source) async {
+  static Future<void> registerTranslations(
+    PlayxTranslationSource source,
+  ) async {
     TranslationSourceRegistry.register(source);
     if (PlayxLocaleController.isBooted) {
       await _controller.reloadTranslations();
@@ -75,7 +75,8 @@ abstract class PlayxLocalization {
     final value = _controller.value;
     if (value == null) {
       throw Exception(
-          'Localization has not been initialized. You must call boot method before accessing any property.');
+        'Localization has not been initialized. You must call boot method before accessing any property.',
+      );
     }
     return value;
   }
@@ -97,8 +98,8 @@ abstract class PlayxLocalization {
   /// If no supported locales are found, it will return null.
   static XLocale? get fallbackLocale =>
       _controller.config.useFallbackTranslations
-          ? _controller.getFallbackLocale()
-          : null;
+      ? _controller.getFallbackLocale()
+      : null;
 
   /// Switch the locale to the next in the supported locales list
   /// if there is no next locale, it will switch to the first one
@@ -118,16 +119,17 @@ abstract class PlayxLocalization {
       _controller.updateById(id, forceAppUpdate: forceAppUpdate);
 
   /// update the locale by language code and country code if available.
-  static Future<bool> updateByLanguageCode(
-          {required String languageCode,
-          String? countryCode,
-          String? scriptCode,
-          bool forceAppUpdate = false}) =>
-      _controller.updateByLanguageCode(
-          languageCode: languageCode,
-          countryCode: countryCode,
-          scriptCode: scriptCode,
-          forceAppUpdate: forceAppUpdate);
+  static Future<bool> updateByLanguageCode({
+    required String languageCode,
+    String? countryCode,
+    String? scriptCode,
+    bool forceAppUpdate = false,
+  }) => _controller.updateByLanguageCode(
+    languageCode: languageCode,
+    countryCode: countryCode,
+    scriptCode: scriptCode,
+    forceAppUpdate: forceAppUpdate,
+  );
 
   /// Updates the locale to current device locale.
   static Future<bool> updateToDeviceLocale({bool forceAppUpdate = false}) =>

@@ -10,14 +10,15 @@ import 'helpers.dart';
 
 const en = XLocale(id: 'en', name: 'English', languageCode: 'en');
 const ar = XLocale(id: 'ar', name: 'Arabic', languageCode: 'ar');
-const enUS =
-    XLocale(id: 'en_us', name: 'English US', languageCode: 'en', countryCode: 'US');
+const enUS = XLocale(
+  id: 'en_us',
+  name: 'English US',
+  languageCode: 'en',
+  countryCode: 'US',
+);
 
 final appData = {
-  'en': {
-    'app': 'App',
-    'shared': 'from app',
-  },
+  'en': {'app': 'App', 'shared': 'from app'},
   'ar': {'app': 'تطبيق'},
 };
 
@@ -25,15 +26,17 @@ PlayxTranslationSource pkgSource(
   String id,
   Map<String, Map<String, dynamic>> data, {
   String? namespace,
-}) =>
-    PlayxTranslationSource(
-      id: id,
-      path: 'packages/$id',
-      namespace: namespace,
-      loader: MemoryAssetLoader(data),
-    );
+}) => PlayxTranslationSource(
+  id: id,
+  path: 'packages/$id',
+  namespace: namespace,
+  loader: MemoryAssetLoader(data),
+);
 
-Future<PlayxLocaleController> boot({List<XLocale>? locales, XLocale? start}) async {
+Future<PlayxLocaleController> boot({
+  List<XLocale>? locales,
+  XLocale? start,
+}) async {
   final c = PlayxLocaleController(
     config: PlayxLocaleConfig(
       supportedLocales: locales ?? const [en, ar],
@@ -57,9 +60,11 @@ void main() {
   });
 
   test('source registered before boot is merged', () async {
-    await PlayxLocalization.registerTranslations(pkgSource('pkg_a', {
-      'en': {'pkg_title': 'Package'},
-    }));
+    await PlayxLocalization.registerTranslations(
+      pkgSource('pkg_a', {
+        'en': {'pkg_title': 'Package'},
+      }),
+    );
     await boot();
     expect('pkg_title'.tr(), 'Package');
     expect('app'.tr(), 'App');
@@ -71,17 +76,21 @@ void main() {
     c.addListener(() => notified++);
     expect('pkg_title'.tr(), 'pkg_title');
 
-    await PlayxLocalization.registerTranslations(pkgSource('pkg_a', {
-      'en': {'pkg_title': 'Package'},
-    }));
+    await PlayxLocalization.registerTranslations(
+      pkgSource('pkg_a', {
+        'en': {'pkg_title': 'Package'},
+      }),
+    );
     expect('pkg_title'.tr(), 'Package');
     expect(notified, 1);
   });
 
   test('app translations override source translations', () async {
-    await PlayxLocalization.registerTranslations(pkgSource('pkg_a', {
-      'en': {'shared': 'from package', 'only_pkg': 'x'},
-    }));
+    await PlayxLocalization.registerTranslations(
+      pkgSource('pkg_a', {
+        'en': {'shared': 'from package', 'only_pkg': 'x'},
+      }),
+    );
     await boot();
     expect('shared'.tr(), 'from app');
     expect('only_pkg'.tr(), 'x');
@@ -89,26 +98,33 @@ void main() {
 
   test('later registered source wins over earlier one', () async {
     await PlayxLocalization.registerTranslations(
-        pkgSource('a', {'en': {'k': 'a'}}));
+      pkgSource('a', {
+        'en': {'k': 'a'},
+      }),
+    );
     await PlayxLocalization.registerTranslations(
-        pkgSource('b', {'en': {'k': 'b'}}));
+      pkgSource('b', {
+        'en': {'k': 'b'},
+      }),
+    );
     await boot();
     expect('k'.tr(), 'b');
   });
 
   test('namespace prefixes keys, including dotted namespaces', () async {
-    await PlayxLocalization.registerTranslations(pkgSource(
-        'pkg_a',
-        {
-          'en': {'title': 'Hi', 'sub': {'x': 'X'}},
+    await PlayxLocalization.registerTranslations(
+      pkgSource('pkg_a', {
+        'en': {
+          'title': 'Hi',
+          'sub': {'x': 'X'},
         },
-        namespace: 'pkg_a'));
-    await PlayxLocalization.registerTranslations(pkgSource(
-        'pkg_b',
-        {
-          'en': {'title': 'Hello'},
-        },
-        namespace: 'libs.pkg_b'));
+      }, namespace: 'pkg_a'),
+    );
+    await PlayxLocalization.registerTranslations(
+      pkgSource('pkg_b', {
+        'en': {'title': 'Hello'},
+      }, namespace: 'libs.pkg_b'),
+    );
     await boot();
     expect('pkg_a.title'.tr(), 'Hi');
     expect('pkg_a.sub.x'.tr(), 'X');
@@ -116,11 +132,12 @@ void main() {
     expect('title'.tr(), 'title');
   });
 
-  test('source missing a locale is skipped and does not break loading',
-      () async {
-    await PlayxLocalization.registerTranslations(pkgSource('pkg_a', {
-      'en': {'pkg_title': 'Package'},
-    }));
+  test('source missing a locale is skipped and does not break loading', () async {
+    await PlayxLocalization.registerTranslations(
+      pkgSource('pkg_a', {
+        'en': {'pkg_title': 'Package'},
+      }),
+    );
     final c = await boot();
     expect(await c.updateTo(ar), isTrue);
     expect('app'.tr(), 'تطبيق');
@@ -129,9 +146,11 @@ void main() {
   });
 
   test('regional locale falls back to the language file', () async {
-    await PlayxLocalization.registerTranslations(pkgSource('pkg_a', {
-      'en': {'pkg_title': 'Package'},
-    }));
+    await PlayxLocalization.registerTranslations(
+      pkgSource('pkg_a', {
+        'en': {'pkg_title': 'Package'},
+      }),
+    );
     final c = PlayxLocaleController(
       config: PlayxLocaleConfig(
         supportedLocales: const [enUS],
@@ -150,10 +169,16 @@ void main() {
   test('re-registering the same id replaces the source', () async {
     await boot();
     await PlayxLocalization.registerTranslations(
-        pkgSource('pkg_a', {'en': {'k': 'one'}}));
+      pkgSource('pkg_a', {
+        'en': {'k': 'one'},
+      }),
+    );
     expect('k'.tr(), 'one');
     await PlayxLocalization.registerTranslations(
-        pkgSource('pkg_a', {'en': {'k': 'two'}}));
+      pkgSource('pkg_a', {
+        'en': {'k': 'two'},
+      }),
+    );
     expect('k'.tr(), 'two');
     expect(TranslationSourceRegistry.sources.length, 1);
   });
@@ -161,7 +186,10 @@ void main() {
   test('unregister removes the translations', () async {
     await boot();
     await PlayxLocalization.registerTranslations(
-        pkgSource('pkg_a', {'en': {'k': 'one'}}));
+      pkgSource('pkg_a', {
+        'en': {'k': 'one'},
+      }),
+    );
     expect(await PlayxLocalization.unregisterTranslations('pkg_a'), isTrue);
     expect('k'.tr(), 'k');
     expect(await PlayxLocalization.unregisterTranslations('pkg_a'), isFalse);
@@ -178,10 +206,12 @@ void main() {
   });
 
   test('preloaded locales include source translations', () async {
-    await PlayxLocalization.registerTranslations(pkgSource('pkg_a', {
-      'en': {'pkg_title': 'Package'},
-      'ar': {'pkg_title': 'حزمة'},
-    }));
+    await PlayxLocalization.registerTranslations(
+      pkgSource('pkg_a', {
+        'en': {'pkg_title': 'Package'},
+        'ar': {'pkg_title': 'حزمة'},
+      }),
+    );
     final c = PlayxLocaleController(
       config: PlayxLocaleConfig(
         supportedLocales: const [en, ar],

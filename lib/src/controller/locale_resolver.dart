@@ -37,9 +37,10 @@ abstract final class LocaleResolver {
     String? scriptCode,
   }) {
     final wanted = Locale.fromSubtags(
-        languageCode: languageCode,
-        countryCode: countryCode,
-        scriptCode: scriptCode);
+      languageCode: languageCode,
+      countryCode: countryCode,
+      scriptCode: scriptCode,
+    );
     for (final l in config.supportedLocales) {
       if (l.locale.supports(wanted)) return l;
     }
@@ -87,7 +88,8 @@ abstract final class LocaleResolver {
     required Locale? deviceLocale,
   }) {
     final locales = config.supportedLocales;
-    final followDevice = saved.id == LocalePersistence.deviceMarker ||
+    final followDevice =
+        saved.id == LocalePersistence.deviceMarker ||
         (saved.id == null && saved.index == -1);
 
     if (!followDevice) {
@@ -111,8 +113,11 @@ abstract final class LocaleResolver {
     }
 
     return (
-      locale: defaultLocale(config,
-          deviceLocale: deviceLocale, followDevice: followDevice),
+      locale: defaultLocale(
+        config,
+        deviceLocale: deviceLocale,
+        followDevice: followDevice,
+      ),
       isDeviceSelected: followDevice,
       fromLegacyIndex: false,
     );

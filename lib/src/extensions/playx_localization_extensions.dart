@@ -29,14 +29,15 @@ extension PlayxLocalizationStringExtensions on String {
     String? gender,
     Locale? locale,
     bool translate = true,
-  }) =>
-      ez.tr(this,
-          context: context,
-          args: args,
-          namedArgs: namedArgs,
-          gender: gender,
-          locale: locale,
-          translate: translate);
+  }) => ez.tr(
+    this,
+    context: context,
+    args: args,
+    namedArgs: namedArgs,
+    gender: gender,
+    locale: locale,
+    translate: translate,
+  );
 
   bool trExists() => ez.trExists(this);
 
@@ -62,19 +63,18 @@ extension PlayxLocalizationStringExtensions on String {
     Locale? locale,
     bool translate = true,
     bool? localizeDigits,
-  }) =>
-      ez.plural(
-        this,
-        value,
-        args: args,
-        namedArgs: namedArgs,
-        name: name,
-        format: format,
-        context: context,
-        locale: locale,
-        translate: translate,
-        localizeDigits: localizeDigits,
-      );
+  }) => ez.plural(
+    this,
+    value,
+    args: args,
+    namedArgs: namedArgs,
+    name: name,
+    format: format,
+    context: context,
+    locale: locale,
+    translate: translate,
+    localizeDigits: localizeDigits,
+  );
 }
 
 /// Text widget extension method for access to [tr()] and [plural()]
@@ -85,35 +85,36 @@ extension PlayxLocalizationStringExtensions on String {
 /// ```
 extension TextTranslateExtension on Text {
   /// {@macro tr}
-  Text tr(
-          {List<String>? args,
-          BuildContext? context,
-          Map<String, String>? namedArgs,
-          String? gender,
-          Locale? locale,
-          bool translate = true}) =>
-      Text(
-          ez.tr(
-            data ?? '',
-            args: args,
-            namedArgs: namedArgs,
-            gender: gender,
-            context: context,
-            locale: locale,
-            translate: translate,
-          ),
-          key: key,
-          style: style,
-          strutStyle: strutStyle,
-          textAlign: textAlign,
-          textDirection: textDirection,
-          locale: locale ?? this.locale,
-          softWrap: softWrap,
-          overflow: overflow,
-          textScaler: textScaler,
-          maxLines: maxLines,
-          semanticsLabel: semanticsLabel,
-          textWidthBasis: textWidthBasis);
+  Text tr({
+    List<String>? args,
+    BuildContext? context,
+    Map<String, String>? namedArgs,
+    String? gender,
+    Locale? locale,
+    bool translate = true,
+  }) => Text(
+    ez.tr(
+      data ?? '',
+      args: args,
+      namedArgs: namedArgs,
+      gender: gender,
+      context: context,
+      locale: locale,
+      translate: translate,
+    ),
+    key: key,
+    style: style,
+    strutStyle: strutStyle,
+    textAlign: textAlign,
+    textDirection: textDirection,
+    locale: locale ?? this.locale,
+    softWrap: softWrap,
+    overflow: overflow,
+    textScaler: textScaler,
+    maxLines: maxLines,
+    semanticsLabel: semanticsLabel,
+    textWidthBasis: textWidthBasis,
+  );
 
   /// {@macro plural}
   Text plural(
@@ -126,32 +127,32 @@ extension TextTranslateExtension on Text {
     Locale? locale,
     bool translate = true,
     bool? localizeDigits,
-  }) =>
-      Text(
-          ez.plural(
-            data ?? '',
-            context: context,
-            value,
-            args: args,
-            namedArgs: namedArgs,
-            name: name,
-            format: format,
-            locale: locale,
-            translate: translate,
-            localizeDigits: localizeDigits,
-          ),
-          key: key,
-          style: style,
-          strutStyle: strutStyle,
-          textAlign: textAlign,
-          textDirection: textDirection,
-          locale: locale ?? this.locale,
-          softWrap: softWrap,
-          overflow: overflow,
-          textScaler: textScaler,
-          maxLines: maxLines,
-          semanticsLabel: semanticsLabel,
-          textWidthBasis: textWidthBasis);
+  }) => Text(
+    ez.plural(
+      data ?? '',
+      context: context,
+      value,
+      args: args,
+      namedArgs: namedArgs,
+      name: name,
+      format: format,
+      locale: locale,
+      translate: translate,
+      localizeDigits: localizeDigits,
+    ),
+    key: key,
+    style: style,
+    strutStyle: strutStyle,
+    textAlign: textAlign,
+    textDirection: textDirection,
+    locale: locale ?? this.locale,
+    softWrap: softWrap,
+    overflow: overflow,
+    textScaler: textScaler,
+    maxLines: maxLines,
+    semanticsLabel: semanticsLabel,
+    textWidthBasis: textWidthBasis,
+  );
 }
 
 extension BuildContextLocalizationExtension on BuildContext {

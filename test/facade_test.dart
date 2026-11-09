@@ -18,18 +18,17 @@ Future<void> boot({
   XLocale start = en,
   bool useFallback = true,
   PlayxLocaleStorage? storage,
-}) =>
-    PlayxLocalization.boot(
-      config: PlayxLocaleConfig(
-        supportedLocales: const [en, ar, fr],
-        startLocale: start,
-        fallbackLocale: en,
-        useFallbackTranslations: useFallback,
-        assetLoader: MemoryAssetLoader(data),
-        storage: storage ?? PlayxMemoryLocaleStorage(),
-        logLocaleChanges: false,
-      ),
-    );
+}) => PlayxLocalization.boot(
+  config: PlayxLocaleConfig(
+    supportedLocales: const [en, ar, fr],
+    startLocale: start,
+    fallbackLocale: en,
+    useFallbackTranslations: useFallback,
+    assetLoader: MemoryAssetLoader(data),
+    storage: storage ?? PlayxMemoryLocaleStorage(),
+    logLocaleChanges: false,
+  ),
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -37,8 +36,11 @@ void main() {
   test('getters expose the booted state', () async {
     await boot(start: ar);
     expect(PlayxLocalization.supportedXLocales, const [en, ar, fr]);
-    expect(PlayxLocalization.supportedLocales,
-        const [Locale('en'), Locale('ar'), Locale('fr')]);
+    expect(PlayxLocalization.supportedLocales, const [
+      Locale('en'),
+      Locale('ar'),
+      Locale('fr'),
+    ]);
     expect(PlayxLocalization.currentIndex, 1);
     expect(PlayxLocalization.currentXLocale, ar);
     expect(PlayxLocalization.currentLocale, const Locale('ar'));
@@ -52,11 +54,13 @@ void main() {
     expect(PlayxLocalization.currentLocaleToString(separator: '-'), 'ar');
   });
 
-  test('fallbackLocale is null when fallback translations are disabled',
-      () async {
-    await boot(useFallback: false);
-    expect(PlayxLocalization.fallbackLocale, isNull);
-  });
+  test(
+    'fallbackLocale is null when fallback translations are disabled',
+    () async {
+      await boot(useFallback: false);
+      expect(PlayxLocalization.fallbackLocale, isNull);
+    },
+  );
 
   test('update methods', () async {
     await boot();
@@ -67,13 +71,16 @@ void main() {
     expect(await PlayxLocalization.updateById('en'), isTrue);
     expect('k'.tr(), 'English');
     expect(
-        await PlayxLocalization.updateByLanguageCode(languageCode: 'fr'), isTrue);
+      await PlayxLocalization.updateByLanguageCode(languageCode: 'fr'),
+      isTrue,
+    );
     expect(PlayxLocalization.currentXLocale, fr);
     expect(await PlayxLocalization.updateByIndex(9), isFalse);
     expect(await PlayxLocalization.updateById('zz'), isFalse);
     expect(
-        await PlayxLocalization.updateByLanguageCode(languageCode: 'de'),
-        isFalse);
+      await PlayxLocalization.updateByLanguageCode(languageCode: 'de'),
+      isFalse,
+    );
     expect(PlayxLocalization.currentXLocale, fr);
   });
 
@@ -91,8 +98,10 @@ void main() {
     final ok = await PlayxLocalization.updateToDeviceLocale();
     if (ok) {
       expect(PlayxLocalization.isDeviceLocaleSelected, isTrue);
-      expect(PlayxLocalization.currentLocale.languageCode,
-          PlayxLocalization.deviceLocale!.languageCode);
+      expect(
+        PlayxLocalization.currentLocale.languageCode,
+        PlayxLocalization.deviceLocale!.languageCode,
+      );
     }
   });
 

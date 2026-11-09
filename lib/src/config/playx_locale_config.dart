@@ -92,14 +92,16 @@ class PlayxLocaleConfig {
   final List<AssetLoader>? extraAssetLoaders;
 
   /// When true, all supported locales are preloaded into memory when the controller initializes.
-  /// This allows translating to arbitrary locales synchronously using `tr(locale: ...)` without 
+  /// This allows translating to arbitrary locales synchronously using `tr(locale: ...)` without
   /// updating the app locale. Warning: Doing this might consume more memory if there are many locales.
   final bool preloadSupportedLocales;
 
   /// Custom localization delegate builder.
   /// This allows you to create a custom list of delegates based on the provided [PlayxLocalizationDelegate].
   final List<LocalizationsDelegate> Function(
-      PlayxLocalizationDelegate delegate)? customLocalizationDelegateBuilder;
+    PlayxLocalizationDelegate delegate,
+  )?
+  customLocalizationDelegateBuilder;
 
   /// Where the selected locale is saved when [saveLocale] is true.
   ///
@@ -120,8 +122,9 @@ class PlayxLocaleConfig {
     this.path = 'assets/translations',
     this.assetLoader = const RootBundleAssetLoader(
       fileLoader: RootBundleFileLoader(),
-      linkedFileResolver:
-          JsonLinkedFileResolver(fileLoader: RootBundleFileLoader()),
+      linkedFileResolver: JsonLinkedFileResolver(
+        fileLoader: RootBundleFileLoader(),
+      ),
     ),
     this.extraAssetLoaders,
     this.saveLocale = true,
@@ -131,7 +134,6 @@ class PlayxLocaleConfig {
     this.storage = const PlayxPrefsLocaleStorage(),
     this.extraDelegates,
     this.customLocalizationDelegateBuilder,
-  })  : assert(path.isNotEmpty, 'path can not be empty'),
-        assert(
-            supportedLocales.isNotEmpty, 'supportedLocales can not be empty');
+  }) : assert(path.isNotEmpty, 'path can not be empty'),
+       assert(supportedLocales.isNotEmpty, 'supportedLocales can not be empty');
 }

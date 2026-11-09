@@ -25,10 +25,7 @@ final data = {
     'named': 'a {a.b} {x+y}',
     'only_en': 'Only English',
   },
-  'ar': {
-    'title': 'عنوان',
-    'link': 'انظر @:title',
-  },
+  'ar': {'title': 'عنوان', 'link': 'انظر @:title'},
 };
 
 Future<PlayxLocaleController> boot({
@@ -77,12 +74,14 @@ void main() {
   });
 
   group('config', () {
-    test('useFallbackTranslations: false disables the fallback locale',
-        () async {
-      final c = await boot(useFallback: false, start: ar);
-      expect(c.fallbackTranslations, isNull);
-      expect('only_en'.tr(), 'only_en');
-    });
+    test(
+      'useFallbackTranslations: false disables the fallback locale',
+      () async {
+        final c = await boot(useFallback: false, start: ar);
+        expect(c.fallbackTranslations, isNull);
+        expect('only_en'.tr(), 'only_en');
+      },
+    );
 
     test('useFallbackTranslations: true uses the fallback locale', () async {
       await boot(start: ar);
@@ -91,8 +90,7 @@ void main() {
   });
 
   group('locale switching', () {
-    test('a failed switch keeps the current locale and translations',
-        () async {
+    test('a failed switch keeps the current locale and translations', () async {
       // fr is supported but has no translation file.
       final c = await boot(locales: const [en, ar, fr]);
       expect(await c.updateTo(fr), isFalse);
@@ -141,28 +139,37 @@ void main() {
       expect(t.locale, const Locale('fr'));
     });
 
-    testWidgets('context RTL helpers use the language, not the text',
-        (tester) async {
+    testWidgets('context RTL helpers use the language, not the text', (
+      tester,
+    ) async {
       late BuildContext arabic, english;
-      await tester.pumpWidget(Directionality(
-        textDirection: TextDirection.ltr,
-        child: Column(children: [
-          PlayxInheritedLocalization(
-            locale: ar,
-            child: Builder(builder: (c) {
-              arabic = c;
-              return const SizedBox();
-            }),
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Column(
+            children: [
+              PlayxInheritedLocalization(
+                locale: ar,
+                child: Builder(
+                  builder: (c) {
+                    arabic = c;
+                    return const SizedBox();
+                  },
+                ),
+              ),
+              PlayxInheritedLocalization(
+                locale: en,
+                child: Builder(
+                  builder: (c) {
+                    english = c;
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ],
           ),
-          PlayxInheritedLocalization(
-            locale: en,
-            child: Builder(builder: (c) {
-              english = c;
-              return const SizedBox();
-            }),
-          ),
-        ]),
-      ));
+        ),
+      );
       expect(arabic.isCurrentLocaleRtl, isTrue);
       expect(arabic.isCurrentLocaleLtr, isFalse);
       expect(english.isCurrentLocaleRtl, isFalse);
@@ -172,8 +179,13 @@ void main() {
     test('facade updateByLanguageCode accepts scriptCode and '
         'currentLocaleToString is callable', () async {
       await boot();
-      expect(await PlayxLocalization.updateByLanguageCode(
-          languageCode: 'ar', scriptCode: null), isTrue);
+      expect(
+        await PlayxLocalization.updateByLanguageCode(
+          languageCode: 'ar',
+          scriptCode: null,
+        ),
+        isTrue,
+      );
       expect(PlayxLocalization.currentLocaleToString(), 'ar');
     });
   });

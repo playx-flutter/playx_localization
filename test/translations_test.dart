@@ -57,7 +57,7 @@ void main() {
 
     test('replaces map with non-map value', () {
       final base = <String, dynamic>{
-        'n': {'x': '1'}
+        'n': {'x': '1'},
       };
       base.addAllRecursive({'n': 'flat'});
       expect(base['n'], 'flat');

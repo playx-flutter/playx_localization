@@ -4,14 +4,65 @@ import 'cli_args.dart';
 import 'translation_files.dart';
 
 const _reserved = {
-  'abstract', 'as', 'assert', 'async', 'await', 'break', 'case', 'catch',
-  'class', 'const', 'continue', 'default', 'deferred', 'do', 'dynamic', 'else',
-  'enum', 'export', 'extends', 'extension', 'external', 'factory', 'false',
-  'final', 'finally', 'for', 'get', 'if', 'implements', 'import', 'in',
-  'interface', 'is', 'late', 'library', 'mixin', 'new', 'null', 'on',
-  'operator', 'part', 'required', 'rethrow', 'return', 'set', 'static',
-  'super', 'switch', 'sync', 'this', 'throw', 'true', 'try', 'typedef', 'var',
-  'void', 'while', 'with', 'yield',
+  'abstract',
+  'as',
+  'assert',
+  'async',
+  'await',
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'continue',
+  'default',
+  'deferred',
+  'do',
+  'dynamic',
+  'else',
+  'enum',
+  'export',
+  'extends',
+  'extension',
+  'external',
+  'factory',
+  'false',
+  'final',
+  'finally',
+  'for',
+  'get',
+  'if',
+  'implements',
+  'import',
+  'in',
+  'interface',
+  'is',
+  'late',
+  'library',
+  'mixin',
+  'new',
+  'null',
+  'on',
+  'operator',
+  'part',
+  'required',
+  'rethrow',
+  'return',
+  'set',
+  'static',
+  'super',
+  'switch',
+  'sync',
+  'this',
+  'throw',
+  'true',
+  'try',
+  'typedef',
+  'var',
+  'void',
+  'while',
+  'with',
+  'yield',
 };
 
 /// Converts a translation key like `home.sign_in-title` to `homeSignInTitle`.
@@ -68,7 +119,8 @@ String generateKeysSource(
         i++;
       }
       warnings?.add(
-          'Key "${entry.key}" collides with another key; generated as $name$i.');
+        'Key "${entry.key}" collides with another key; generated as $name$i.',
+      );
       name = '$name$i';
     }
     b
@@ -93,7 +145,11 @@ Usage: dart run playx_localization:generate [options]
 ''';
 
 /// Entry point of `generate`. Returns the process exit code.
-Future<int> runGenerate(List<String> args, {StringSink? out, StringSink? err}) async {
+Future<int> runGenerate(
+  List<String> args, {
+  StringSink? out,
+  StringSink? err,
+}) async {
   out ??= stdout;
   err ??= stderr;
   final cli = CliArgs.parse(args, flagNames: {'check', 'help'});
@@ -123,7 +179,11 @@ Future<int> runGenerate(List<String> args, {StringSink? out, StringSink? err}) a
   }
 
   final warnings = <String>[];
-  final code = generateKeysSource(data, className: className, warnings: warnings);
+  final code = generateKeysSource(
+    data,
+    className: className,
+    warnings: warnings,
+  );
   for (final w in warnings) {
     out.writeln('warning: $w');
   }
@@ -132,7 +192,9 @@ Future<int> runGenerate(List<String> args, {StringSink? out, StringSink? err}) a
   if (cli.has('check')) {
     final current = file.existsSync() ? file.readAsStringSync() : null;
     if (current != code) {
-      err.writeln('$output is out of date. Run: dart run playx_localization:generate');
+      err.writeln(
+        '$output is out of date. Run: dart run playx_localization:generate',
+      );
       return 1;
     }
     out.writeln('$output is up to date.');
@@ -141,6 +203,8 @@ Future<int> runGenerate(List<String> args, {StringSink? out, StringSink? err}) a
 
   file.parent.createSync(recursive: true);
   file.writeAsStringSync(code);
-  out.writeln('Generated $className with ${flattenTranslations(data).length} keys -> $output');
+  out.writeln(
+    'Generated $className with ${flattenTranslations(data).length} keys -> $output',
+  );
   return 0;
 }

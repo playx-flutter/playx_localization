@@ -13,7 +13,11 @@ const ru = XLocale(id: 'ru', name: 'Russian', languageCode: 'ru');
 
 final data = {
   'en': {
-    'vehicle': {'one': 'vehicle', 'two': 'two vehicles', 'other': '{} vehicles'},
+    'vehicle': {
+      'one': 'vehicle',
+      'two': 'two vehicles',
+      'other': '{} vehicles',
+    },
     'item': {'zero': 'no items', 'one': 'one item', 'other': '{} items'},
   },
   'ar': {
@@ -27,15 +31,16 @@ final data = {
     'only_other': {'other': '{} عنصر'},
   },
   'ru': {
-    'day': {'one': '{} день', 'few': '{} дня', 'many': '{} дней', 'other': '{} дня'},
+    'day': {
+      'one': '{} день',
+      'few': '{} дня',
+      'many': '{} дней',
+      'other': '{} дня',
+    },
   },
 };
 
-Future<void> boot({
-  XLocale start = ar,
-  bool? ignore,
-  bool? digits,
-}) async {
+Future<void> boot({XLocale start = ar, bool? ignore, bool? digits}) async {
   final c = PlayxLocaleController(
     config: PlayxLocaleConfig(
       supportedLocales: const [en, ar, ru],
@@ -92,7 +97,9 @@ void main() {
     test('a custom format still wins over localized digits', () async {
       await boot(digits: true);
       expect(
-          'vehicle'.plural(3, format: NumberFormat('000', 'en')), '003 مركبات');
+        'vehicle'.plural(3, format: NumberFormat('000', 'en')),
+        '003 مركبات',
+      );
     });
 
     test('a group with only "other" works for every number', () async {
@@ -103,8 +110,10 @@ void main() {
 
     test('Text.plural and name arguments use the same rules', () async {
       await boot();
-      expect(const Text('vehicle').plural(3, localizeDigits: true).data,
-          '٣ مركبات');
+      expect(
+        const Text('vehicle').plural(3, localizeDigits: true).data,
+        '٣ مركبات',
+      );
     });
   });
 
@@ -136,8 +145,9 @@ void main() {
       await boot(start: en);
       await PlayxLocalization.preloadLocales([const Locale('ar')]);
       expect(
-          'vehicle'.plural(3, locale: const Locale('ar'), localizeDigits: true),
-          '٣ مركبات');
+        'vehicle'.plural(3, locale: const Locale('ar'), localizeDigits: true),
+        '٣ مركبات',
+      );
     });
   });
 
@@ -166,14 +176,17 @@ void main() {
 
   group('validator warns about missing plural forms', () {
     test('Arabic group without few/many', () {
-      final issues = validateTranslations(baseLocale: 'en', locales: {
-        'en': {
-          'v': {'one': 'a', 'other': 'b'}
+      final issues = validateTranslations(
+        baseLocale: 'en',
+        locales: {
+          'en': {
+            'v': {'one': 'a', 'other': 'b'},
+          },
+          'ar': {
+            'v': {'one': 'a', 'two': 'b', 'other': 'c'},
+          },
         },
-        'ar': {
-          'v': {'one': 'a', 'two': 'b', 'other': 'c'},
-        },
-      });
+      );
       expect(
         issues.map((i) => i.toString()),
         contains(contains('[ar] v: plural group has no few, many form')),
@@ -181,32 +194,38 @@ void main() {
     });
 
     test('complete Arabic group and English one/other are fine', () {
-      final issues = validateTranslations(baseLocale: 'en', locales: {
-        'en': {
-          'v': {'one': 'a', 'other': 'b'}
-        },
-        'ar': {
-          'v': {
-            'one': 'a',
-            'two': 'b',
-            'few': 'c',
-            'many': 'd',
-            'other': 'e',
+      final issues = validateTranslations(
+        baseLocale: 'en',
+        locales: {
+          'en': {
+            'v': {'one': 'a', 'other': 'b'},
+          },
+          'ar': {
+            'v': {
+              'one': 'a',
+              'two': 'b',
+              'few': 'c',
+              'many': 'd',
+              'other': 'e',
+            },
           },
         },
-      });
+      );
       expect(issues, isEmpty);
     });
 
     test('regional file names use the language', () {
-      final issues = validateTranslations(baseLocale: 'en', locales: {
-        'en': {
-          'v': {'one': 'a', 'other': 'b'}
+      final issues = validateTranslations(
+        baseLocale: 'en',
+        locales: {
+          'en': {
+            'v': {'one': 'a', 'other': 'b'},
+          },
+          'ar-EG': {
+            'v': {'one': 'a', 'other': 'b'},
+          },
         },
-        'ar-EG': {
-          'v': {'one': 'a', 'other': 'b'},
-        },
-      });
+      );
       expect(issues.single.toString(), contains('few, many, two'));
     });
   });

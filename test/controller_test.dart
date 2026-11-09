@@ -10,9 +10,17 @@ import 'helpers.dart';
 const en = XLocale(id: 'en', name: 'English', languageCode: 'en');
 const ar = XLocale(id: 'ar', name: 'Arabic', languageCode: 'ar');
 const zhHant = XLocale(
-    id: 'zh_hant', name: 'Chinese T', languageCode: 'zh', scriptCode: 'Hant');
+  id: 'zh_hant',
+  name: 'Chinese T',
+  languageCode: 'zh',
+  scriptCode: 'Hant',
+);
 const zhHans = XLocale(
-    id: 'zh_hans', name: 'Chinese S', languageCode: 'zh', scriptCode: 'Hans');
+  id: 'zh_hans',
+  name: 'Chinese S',
+  languageCode: 'zh',
+  scriptCode: 'Hans',
+);
 
 final translations = {
   'en': {
@@ -34,16 +42,15 @@ PlayxLocaleConfig makeConfig({
   List<AssetLoader>? extra,
   bool preload = false,
   XLocale? start,
-}) =>
-    PlayxLocaleConfig(
-      supportedLocales: const [en, ar, zhHant, zhHans],
-      startLocale: start,
-      fallbackLocale: en,
-      assetLoader: MemoryAssetLoader(translations),
-      extraAssetLoaders: extra,
-      preloadSupportedLocales: preload,
-      logLocaleChanges: false,
-    );
+}) => PlayxLocaleConfig(
+  supportedLocales: const [en, ar, zhHant, zhHans],
+  startLocale: start,
+  fallbackLocale: en,
+  assetLoader: MemoryAssetLoader(translations),
+  extraAssetLoaders: extra,
+  preloadSupportedLocales: preload,
+  logLocaleChanges: false,
+);
 
 Future<PlayxLocaleController> boot(PlayxLocaleConfig config) async {
   final c = PlayxLocaleController(config: config);
@@ -132,23 +139,28 @@ void main() {
 
     test('matches script code', () {
       expect(
-          c.searchLocaleByLanguageCode(languageCode: 'zh', scriptCode: 'Hant'),
-          zhHant);
+        c.searchLocaleByLanguageCode(languageCode: 'zh', scriptCode: 'Hant'),
+        zhHant,
+      );
       expect(
-          c.searchLocaleByLanguageCode(languageCode: 'zh', scriptCode: 'Hans'),
-          zhHans);
+        c.searchLocaleByLanguageCode(languageCode: 'zh', scriptCode: 'Hans'),
+        zhHans,
+      );
     });
 
     test('falls back to language code only', () {
-      expect(c.searchLocaleByLanguageCode(languageCode: 'ar', countryCode: 'EG'),
-          ar);
+      expect(
+        c.searchLocaleByLanguageCode(languageCode: 'ar', countryCode: 'EG'),
+        ar,
+      );
       expect(c.searchLocaleByLanguageCode(languageCode: 'fr'), isNull);
     });
 
     test('updateByLanguageCode with script code', () async {
       expect(
-          await c.updateByLanguageCode(languageCode: 'zh', scriptCode: 'Hans'),
-          isTrue);
+        await c.updateByLanguageCode(languageCode: 'zh', scriptCode: 'Hans'),
+        isTrue,
+      );
       expect(c.value, zhHans);
       expect('hello'.tr(), '你好');
     });
@@ -160,8 +172,10 @@ void main() {
       expect(c.value, en);
       expect(await c.updateById('nope'), isFalse);
       expect(await c.updateByIndex(99), isFalse);
-      expect(await c.updateTo(const XLocale(id: 'x', name: 'x', languageCode: 'fr')),
-          isFalse);
+      expect(
+        await c.updateTo(const XLocale(id: 'x', name: 'x', languageCode: 'fr')),
+        isFalse,
+      );
     });
 
     test('nextLocale wraps around', () async {
@@ -206,21 +220,27 @@ void main() {
       expect('nested.c'.tr(), 'C-extra-ar');
     });
 
-    test('preloadSupportedLocales allows synchronous any-locale lookup',
-        () async {
-      final c = await boot(makeConfig(start: en, preload: true));
-      expect(c.preloadedTranslations, isNotNull);
-      expect(c.preloadedTranslations!.length, 4);
-      expect('hello'.tr(locale: const Locale('ar')), 'مرحبا');
-      expect('hello'.tr(locale: const Locale('en')), 'Hello');
-      expect(
+    test(
+      'preloadSupportedLocales allows synchronous any-locale lookup',
+      () async {
+        final c = await boot(makeConfig(start: en, preload: true));
+        expect(c.preloadedTranslations, isNotNull);
+        expect(c.preloadedTranslations!.length, 4);
+        expect('hello'.tr(locale: const Locale('ar')), 'مرحبا');
+        expect('hello'.tr(locale: const Locale('en')), 'Hello');
+        expect(
           'hello'.tr(
-              locale: const Locale.fromSubtags(
-                  languageCode: 'zh', scriptCode: 'Hant')),
-          '哈囉');
-      // Current locale is untouched.
-      expect(c.value, en);
-    });
+            locale: const Locale.fromSubtags(
+              languageCode: 'zh',
+              scriptCode: 'Hant',
+            ),
+          ),
+          '哈囉',
+        );
+        // Current locale is untouched.
+        expect(c.value, en);
+      },
+    );
 
     test('without preload, other locales are not resolved', () async {
       await boot(makeConfig(start: en));

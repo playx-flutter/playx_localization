@@ -77,8 +77,11 @@ void main() {
       for (final entry in pluralRules.entries) {
         for (final n in [0, 1, 2, 3, 5, 11, 21, 100, 1.5]) {
           startRuleEvaluation(n, null);
-          expect(entry.value(), isA<PluralCase>(),
-              reason: '${entry.key} with $n');
+          expect(
+            entry.value(),
+            isA<PluralCase>(),
+            reason: '${entry.key} with $n',
+          );
         }
       }
     });

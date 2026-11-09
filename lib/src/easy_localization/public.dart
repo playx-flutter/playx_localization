@@ -41,14 +41,17 @@ String tr(
   Locale? locale,
   bool translate = true,
 }) {
-  final localization = (context != null ? Localization.of(context) : null) ??
+  final localization =
+      (context != null ? Localization.of(context) : null) ??
       Localization.instance;
-  return localization.tr(key,
-      args: args,
-      namedArgs: namedArgs,
-      gender: gender,
-      locale: locale,
-      translate: translate);
+  return localization.tr(
+    key,
+    args: args,
+    namedArgs: namedArgs,
+    gender: gender,
+    locale: locale,
+    translate: translate,
+  );
 }
 
 bool trExists(String key, {BuildContext? context}) {
@@ -121,13 +124,16 @@ String plural(
 }) {
   final Localization localization =
       (context != null ? Localization.of(context) : null) ??
-          Localization.instance;
-  return localization.plural(key, value,
-      args: args,
-      namedArgs: namedArgs,
-      name: name,
-      format: format,
-      locale: locale,
-      translate: translate,
-      localizeDigits: localizeDigits);
+      Localization.instance;
+  return localization.plural(
+    key,
+    value,
+    args: args,
+    namedArgs: namedArgs,
+    name: name,
+    format: format,
+    locale: locale,
+    translate: translate,
+    localizeDigits: localizeDigits,
+  );
 }

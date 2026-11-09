@@ -61,7 +61,7 @@ class PlayxMemoryLocaleStorage implements PlayxLocaleStorage {
   final Map<String, Object> _values;
 
   PlayxMemoryLocaleStorage([Map<String, Object>? initialValues])
-      : _values = {...?initialValues};
+    : _values = {...?initialValues};
 
   @override
   Future<int?> getInt(String key) async {

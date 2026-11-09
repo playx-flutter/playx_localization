@@ -70,19 +70,19 @@ class LocalePersistence {
 
   /// Saves [locale], located at [index] in `supportedLocales`.
   Future<void> saveLocale(XLocale locale, int index) => _enqueue(() async {
-        await storage.setString(idKey, locale.id);
-        await storage.setInt(indexKey, index);
-      });
+    await storage.setString(idKey, locale.id);
+    await storage.setInt(indexKey, index);
+  });
 
   /// Saves that the app follows the device locale.
   Future<void> saveDeviceLocale() => _enqueue(() async {
-        await storage.setString(idKey, deviceMarker);
-        await storage.setInt(indexKey, -1);
-      });
+    await storage.setString(idKey, deviceMarker);
+    await storage.setInt(indexKey, -1);
+  });
 
   /// Removes everything saved.
   Future<void> clear() => _enqueue(() async {
-        await storage.remove(idKey);
-        await storage.remove(indexKey);
-      });
+    await storage.remove(idKey);
+    await storage.remove(indexKey);
+  });
 }

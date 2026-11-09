@@ -10,7 +10,11 @@ const en = XLocale(id: 'en', name: 'English', languageCode: 'en');
 const ar = XLocale(id: 'ar', name: 'Arabic', languageCode: 'ar');
 const fr = XLocale(id: 'fr', name: 'French', languageCode: 'fr');
 const zhHant = XLocale(
-    id: 'zh_hant', name: 'Chinese T', languageCode: 'zh', scriptCode: 'Hant');
+  id: 'zh_hant',
+  name: 'Chinese T',
+  languageCode: 'zh',
+  scriptCode: 'Hant',
+);
 
 final data = {
   'en': {'k': 'English'},
@@ -27,17 +31,16 @@ PlayxLocaleConfig cfg({
   List<LocalizationsDelegate> Function(PlayxLocalizationDelegate)? builder,
   bool useOnlyLangCode = false,
   Map<String, Map<String, dynamic>>? files,
-}) =>
-    PlayxLocaleConfig(
-      supportedLocales: locales,
-      startLocale: start,
-      assetLoader: MemoryAssetLoader(files ?? data),
-      storage: PlayxMemoryLocaleStorage(),
-      logLocaleChanges: logChanges,
-      extraDelegates: extra,
-      customLocalizationDelegateBuilder: builder,
-      useOnlyLangCode: useOnlyLangCode,
-    );
+}) => PlayxLocaleConfig(
+  supportedLocales: locales,
+  startLocale: start,
+  assetLoader: MemoryAssetLoader(files ?? data),
+  storage: PlayxMemoryLocaleStorage(),
+  logLocaleChanges: logChanges,
+  extraDelegates: extra,
+  customLocalizationDelegateBuilder: builder,
+  useOnlyLangCode: useOnlyLangCode,
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -70,13 +73,17 @@ void main() {
       expect(c.value, en);
     });
 
-    test('a locale without a translation file keeps the current one',
-        () async {
+    test('a locale without a translation file keeps the current one', () async {
       final c = PlayxLocaleController(
-          config: cfg(locales: const [en, ar, fr], start: en, files: {
-        'en': {'k': 'English'},
-        'ar': {'k': 'عربي'},
-      }));
+        config: cfg(
+          locales: const [en, ar, fr],
+          start: en,
+          files: {
+            'en': {'k': 'English'},
+            'ar': {'k': 'عربي'},
+          },
+        ),
+      );
       await c.boot();
       expect(await c.updateTo(fr), isFalse);
       expect(c.value, en);
@@ -117,7 +124,8 @@ void main() {
   group('device locale', () {
     test('fails when the device language is not supported', () async {
       final c = PlayxLocaleController(
-          config: cfg(locales: const [ar, fr], start: ar));
+        config: cfg(locales: const [ar, fr], start: ar),
+      );
       await c.boot();
       // The test host reports an en-US device locale.
       expect(await c.updateToDeviceLocale(), isFalse);
@@ -146,71 +154,88 @@ void main() {
 
     test('extra delegates are added', () async {
       final extra = DefaultMaterialLocalizations.delegate;
-      final c = PlayxLocaleController(config: cfg(start: en, extra: [extra]));
+      final c = PlayxLocaleController(
+        config: cfg(start: en, extra: [extra]),
+      );
       await c.boot();
       expect(c.delegates, contains(extra));
     });
 
     test('a custom builder replaces the list', () async {
       final c = PlayxLocaleController(
-          config: cfg(start: en, builder: (d) => [d]));
+        config: cfg(start: en, builder: (d) => [d]),
+      );
       await c.boot();
       expect(c.delegates, [c.delegate]);
     });
   });
 
   group('locale details', () {
-    test('useOnlyLangCode loads the language file for regional locales',
-        () async {
-      const enUS = XLocale(
+    test(
+      'useOnlyLangCode loads the language file for regional locales',
+      () async {
+        const enUS = XLocale(
           id: 'en_us',
           name: 'English US',
           languageCode: 'en',
-          countryCode: 'US');
-      final c = PlayxLocaleController(
+          countryCode: 'US',
+        );
+        final c = PlayxLocaleController(
           config: cfg(
-              locales: const [enUS],
-              start: enUS,
-              useOnlyLangCode: true,
-              files: {
-            'en': {'k': 'language only'}
-          }));
-      await c.boot();
-      expect('k'.tr(), 'language only');
-    });
+            locales: const [enUS],
+            start: enUS,
+            useOnlyLangCode: true,
+            files: {
+              'en': {'k': 'language only'},
+            },
+          ),
+        );
+        await c.boot();
+        expect('k'.tr(), 'language only');
+      },
+    );
 
     test('script code locales load and are found by script', () async {
       final c = PlayxLocaleController(
-          config: cfg(locales: const [en, zhHant], start: zhHant));
+        config: cfg(locales: const [en, zhHant], start: zhHant),
+      );
       await c.boot();
       expect('k'.tr(), '繁體');
-      expect(c.supportedLocales.last,
-          const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'));
+      expect(
+        c.supportedLocales.last,
+        const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+      );
       expect(c.currentLocaleToString(separator: '-'), 'zh-Hant');
     });
 
     test('searchLocaleByLanguageCode falls back to the language', () async {
       final c = PlayxLocaleController(config: cfg());
-      expect(c.searchLocaleByLanguageCode(languageCode: 'ar', countryCode: 'EG'),
-          ar);
+      expect(
+        c.searchLocaleByLanguageCode(languageCode: 'ar', countryCode: 'EG'),
+        ar,
+      );
       expect(c.searchLocaleByLanguageCode(languageCode: 'de'), isNull);
     });
 
     test('getFallbackLocale prefers english, then the first locale', () {
       expect(PlayxLocaleController(config: cfg()).getFallbackLocale(), en);
       expect(
-          PlayxLocaleController(config: cfg(locales: const [ar, fr]))
-              .getFallbackLocale(),
-          ar);
+        PlayxLocaleController(
+          config: cfg(locales: const [ar, fr]),
+        ).getFallbackLocale(),
+        ar,
+      );
     });
 
-    test('deprecated getLastSavedIndexFromPrefs reads the saved index',
-        () async {
-      final c = PlayxLocaleController(config: cfg(start: en));
-      await c.boot();
-      await c.updateTo(ar);
-      // ignore: deprecated_member_use_from_same_package
-      expect(await c.getLastSavedIndexFromPrefs(), 1);
-    });
+    test(
+      'deprecated getLastSavedIndexFromPrefs reads the saved index',
+      () async {
+        final c = PlayxLocaleController(config: cfg(start: en));
+        await c.boot();
+        await c.updateTo(ar);
+        // ignore: deprecated_member_use_from_same_package
+        expect(await c.getLastSavedIndexFromPrefs(), 1);
+      },
+    );
   });
 }

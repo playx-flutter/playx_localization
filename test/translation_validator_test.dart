@@ -17,10 +17,13 @@ void main() {
 
   group('validateTranslations', () {
     test('reports missing and extra keys', () {
-      final issues = validateTranslations(baseLocale: 'en', locales: {
-        'en': {'a': 'A', 'b': 'B'},
-        'ar': {'a': 'ا', 'c': 'ج'},
-      });
+      final issues = validateTranslations(
+        baseLocale: 'en',
+        locales: {
+          'en': {'a': 'A', 'b': 'B'},
+          'ar': {'a': 'ا', 'c': 'ج'},
+        },
+      );
       expect(
         messages(issues),
         containsAll([
@@ -31,42 +34,51 @@ void main() {
     });
 
     test('reports placeholder mismatches, ignoring order', () {
-      final issues = validateTranslations(baseLocale: 'en', locales: {
-        'en': {'ok': '{a} then {b}', 'bad': 'Hi {name}', 'pos': '{} items'},
-        'ar': {'ok': '{b} ثم {a}', 'bad': 'مرحبا', 'pos': '{} {} عناصر'},
-      });
+      final issues = validateTranslations(
+        baseLocale: 'en',
+        locales: {
+          'en': {'ok': '{a} then {b}', 'bad': 'Hi {name}', 'pos': '{} items'},
+          'ar': {'ok': '{b} ثم {a}', 'bad': 'مرحبا', 'pos': '{} {} عناصر'},
+        },
+      );
       final errors = issues.where((i) => i.severity == IssueSeverity.error);
       expect(errors.map((e) => e.key), unorderedEquals(['bad', 'pos']));
     });
 
     test('compares nested keys and plural groups', () {
-      final issues = validateTranslations(baseLocale: 'en', locales: {
-        'en': {
-          'home': {'title': 'T'},
-          'item': {'one': '{} item', 'other': '{} items'},
-        },
-        'ar': {
-          'home': {'title': 'ع'},
-          'item': {
-            'zero': 'لا',
-            'one': 'عنصر',
-            'two': 'عنصران',
-            'few': '{} عناصر',
-            'many': '{} عنصرا',
-            'other': '{} عنصر',
+      final issues = validateTranslations(
+        baseLocale: 'en',
+        locales: {
+          'en': {
+            'home': {'title': 'T'},
+            'item': {'one': '{} item', 'other': '{} items'},
+          },
+          'ar': {
+            'home': {'title': 'ع'},
+            'item': {
+              'zero': 'لا',
+              'one': 'عنصر',
+              'two': 'عنصران',
+              'few': '{} عناصر',
+              'many': '{} عنصرا',
+              'other': '{} عنصر',
+            },
           },
         },
-      });
+      );
       expect(issues, isEmpty);
     });
 
     test('flags plural groups without other, and empty values', () {
-      final issues = validateTranslations(baseLocale: 'en', locales: {
-        'en': {
-          'item': {'one': 'item'},
-          'blank': '  ',
+      final issues = validateTranslations(
+        baseLocale: 'en',
+        locales: {
+          'en': {
+            'item': {'one': 'item'},
+            'blank': '  ',
+          },
         },
-      });
+      );
       expect(
         messages(issues),
         containsAll([
@@ -78,10 +90,13 @@ void main() {
 
     test('identical locales produce no issues', () {
       expect(
-        validateTranslations(baseLocale: 'en', locales: {
-          'en': {'a': '{x}'},
-          'fr': {'a': '{x}'},
-        }),
+        validateTranslations(
+          baseLocale: 'en',
+          locales: {
+            'en': {'a': '{x}'},
+            'fr': {'a': '{x}'},
+          },
+        ),
         isEmpty,
       );
     });
@@ -93,8 +108,9 @@ void main() {
     tearDown(() => dir.deleteSync(recursive: true));
 
     String p(String name) => '${dir.path}${Platform.pathSeparator}$name';
-    void write(String name, Object data) =>
-        File(p(name)).writeAsStringSync(data is String ? data : json.encode(data));
+    void write(String name, Object data) => File(
+      p(name),
+    ).writeAsStringSync(data is String ? data : json.encode(data));
 
     test('passes for consistent files', () async {
       write('en.json', {'a': 'A {n}'});
@@ -112,9 +128,9 @@ void main() {
       write('ar.json', {'a': 'ا', 'b': 'ب', 'extra': 'x'});
       expect(await runValidate(['--dir', dir.path], out: StringBuffer()), 0);
       expect(
-          await runValidate(['--dir', dir.path, '--strict'],
-              out: StringBuffer()),
-          1);
+        await runValidate(['--dir', dir.path, '--strict'], out: StringBuffer()),
+        1,
+      );
     });
 
     test('reports invalid JSON and broken links', () async {
@@ -130,7 +146,8 @@ void main() {
       write('en.json', {'used_literal': 'A', 'used_const': 'B', 'unused': 'C'});
       Directory(p('src')).createSync();
       File(p('src/a.dart')).writeAsStringSync(
-          "final a = 'used_literal'.tr(); final b = AppTrans.usedConst;");
+        "final a = 'used_literal'.tr(); final b = AppTrans.usedConst;",
+      );
       final out = StringBuffer();
       await runValidate(['--dir', dir.path, '--src', p('src')], out: out);
       expect(out.toString(), contains('unused: unused in'));
@@ -141,17 +158,22 @@ void main() {
     test('errors for missing directory or base locale', () async {
       final err = StringBuffer();
       expect(
-          await runValidate(['--dir', p('nope')], out: StringBuffer(), err: err),
-          66);
+        await runValidate(['--dir', p('nope')], out: StringBuffer(), err: err),
+        66,
+      );
       write('fr.json', {'a': 'A'});
       expect(
-          await runValidate(['--dir', dir.path],
-              out: StringBuffer(), err: err),
-          66);
+        await runValidate(['--dir', dir.path], out: StringBuffer(), err: err),
+        66,
+      );
       expect(
-          await runValidate(['--dir', dir.path, '--base', 'fr'],
-              out: StringBuffer(), err: err),
-          0);
+        await runValidate(
+          ['--dir', dir.path, '--base', 'fr'],
+          out: StringBuffer(),
+          err: err,
+        ),
+        0,
+      );
     });
   });
 }

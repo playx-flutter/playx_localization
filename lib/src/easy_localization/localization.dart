@@ -11,8 +11,9 @@ class Localization {
   late Locale _locale;
 
   final RegExp _replaceArgRegex = RegExp('{}');
-  final RegExp _linkKeyMatcher =
-      RegExp(r'(?:@(?:\.[a-z]+)?:(?:[\w\-_|.]+|\([\w\-_|.]+\)))');
+  final RegExp _linkKeyMatcher = RegExp(
+    r'(?:@(?:\.[a-z]+)?:(?:[\w\-_|.]+|\([\w\-_|.]+\)))',
+  );
   final RegExp _linkKeyPrefixMatcher = RegExp(r'^@(?:\.([a-z]+))?:');
   final RegExp _bracketsMatcher = RegExp('[()]');
   final _modifiers = <String, String Function(String?)>{
@@ -20,7 +21,7 @@ class Localization {
     'lower': (String? val) => val!.toLowerCase(),
     'capitalize': (String? val) => val == null || val.isEmpty
         ? ''
-        : '${val[0].toUpperCase()}${val.substring(1)}'
+        : '${val[0].toUpperCase()}${val.substring(1)}',
   };
 
   bool _useFallbackTranslationsForEmptyResources = false;
@@ -102,8 +103,9 @@ class Localization {
       final formatterName = linkPrefixMatches.first[1];
 
       // Remove the leading @:, @.case: and the brackets
-      final linkPlaceholder =
-          link.replaceAll(linkPrefix, '').replaceAll(_bracketsMatcher, '');
+      final linkPlaceholder = link
+          .replaceAll(linkPrefix, '')
+          .replaceAll(_bracketsMatcher, '');
 
       var translated = _resolve(linkPlaceholder, locale: locale);
 
@@ -113,13 +115,15 @@ class Localization {
         } else {
           if (logging) {
             PlayxLocaleController.logger?.warning(
-                'Undefined modifier $formatterName, available modifiers: ${_modifiers.keys.toString()}');
+              'Undefined modifier $formatterName, available modifiers: ${_modifiers.keys.toString()}',
+            );
           }
         }
       }
 
-      result =
-          translated.isEmpty ? result : result.replaceAll(link, translated);
+      result = translated.isEmpty
+          ? result
+          : result.replaceAll(link, translated);
     }
 
     return result;
@@ -135,8 +139,9 @@ class Localization {
 
   String _replaceNamedArgs(String res, Map<String, String>? args) {
     if (args == null || args.isEmpty) return res;
-    args.forEach((String key, String value) =>
-        res = res.replaceAll('{$key}', value));
+    args.forEach(
+      (String key, String value) => res = res.replaceAll('{$key}', value),
+    );
     return res;
   }
 
@@ -164,14 +169,21 @@ class Localization {
     bool translate = true,
     bool? localizeDigits,
   }) {
-    final formattedValue = _formatPluralValue(value,
-        format: format, localizeDigits: localizeDigits, locale: locale);
+    final formattedValue = _formatPluralValue(
+      value,
+      format: format,
+      localizeDigits: localizeDigits,
+      locale: locale,
+    );
 
     late String res;
     if (translate) {
       final languageCode = locale?.languageCode ?? _locale.languageCode;
-      res = _resolvePluralForms(key, _pluralForms(languageCode, value),
-          locale: locale);
+      res = _resolvePluralForms(
+        key,
+        _pluralForms(languageCode, value),
+        locale: locale,
+      );
     } else {
       res = key;
     }
@@ -225,15 +237,16 @@ class Localization {
     return {exact.name.toLowerCase(), language.name.toLowerCase()}.toList();
   }
 
-  String _resolvePluralForms(String key, List<String> forms,
-      {Locale? locale}) {
+  String _resolvePluralForms(String key, List<String> forms, {Locale? locale}) {
     for (final form in forms) {
       if (form == 'other') continue;
       final tag = '$key.$form';
-      final resource = _resolve(tag,
-          logging: false,
-          fallback: _fallbackTranslations != null,
-          locale: locale);
+      final resource = _resolve(
+        tag,
+        logging: false,
+        fallback: _fallbackTranslations != null,
+        locale: locale,
+      );
       if (resource != tag) return resource;
     }
     return _resolve('$key.other', locale: locale);
@@ -243,26 +256,35 @@ class Localization {
     return _resolve('$key.$gender', locale: locale);
   }
 
-  String _resolve(String key, {bool logging = true, bool fallback = true, Locale? locale}) {
+  String _resolve(
+    String key, {
+    bool logging = true,
+    bool fallback = true,
+    Locale? locale,
+  }) {
     String? resource;
     bool isRequestedLanguageFallback = false;
 
     if (locale != null) {
-      final xLocale = PlayxLocaleController.controller.config.supportedLocales.firstWhereOrNull((e) => e.locale.supports(locale));
+      final xLocale = PlayxLocaleController.controller.config.supportedLocales
+          .firstWhereOrNull((e) => e.locale.supports(locale));
       if (xLocale != null) {
         if (xLocale.locale == _locale) {
           resource = _translations?.get(key);
         } else {
-          final fallbackLocale = PlayxLocaleController.controller.getFallbackLocale();
+          final fallbackLocale = PlayxLocaleController.controller
+              .getFallbackLocale();
           if (xLocale.locale == fallbackLocale.locale) {
             resource = _fallbackTranslations?.get(key);
             isRequestedLanguageFallback = true;
-          } else if (_preloadedTranslations != null && _preloadedTranslations!.containsKey(xLocale.locale)) {
+          } else if (_preloadedTranslations != null &&
+              _preloadedTranslations!.containsKey(xLocale.locale)) {
             resource = _preloadedTranslations![xLocale.locale]?.get(key);
           } else {
             if (logging) {
               PlayxLocaleController.logger?.warning(
-                  'Translations for $locale are not loaded. Set preloadSupportedLocales to true in PlayxLocaleConfig to support this, or only request current/fallback locales.');
+                'Translations for $locale are not loaded. Set preloadSupportedLocales to true in PlayxLocaleConfig to support this, or only request current/fallback locales.',
+              );
             }
             return key;
           }
@@ -270,7 +292,8 @@ class Localization {
       } else {
         if (logging) {
           PlayxLocaleController.logger?.warning(
-              'Translations for $locale are not supported in config.');
+            'Translations for $locale are not supported in config.',
+          );
         }
         return key;
       }
@@ -281,18 +304,22 @@ class Localization {
     if (resource == null ||
         (_useFallbackTranslationsForEmptyResources && resource.isEmpty)) {
       if (logging && !isRequestedLanguageFallback) {
-        PlayxLocaleController.logger
-            ?.warning('Localization key [$key] not found');
+        PlayxLocaleController.logger?.warning(
+          'Localization key [$key] not found',
+        );
       }
-      if (_fallbackTranslations == null || !fallback || isRequestedLanguageFallback) {
+      if (_fallbackTranslations == null ||
+          !fallback ||
+          isRequestedLanguageFallback) {
         return key;
       } else {
         resource = _fallbackTranslations?.get(key);
         if (resource == null ||
             (_useFallbackTranslationsForEmptyResources && resource.isEmpty)) {
           if (logging) {
-            PlayxLocaleController.logger
-                ?.warning('Fallback localization key [$key] not found');
+            PlayxLocaleController.logger?.warning(
+              'Fallback localization key [$key] not found',
+            );
           }
           return key;
         }
