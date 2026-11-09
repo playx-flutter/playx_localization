@@ -57,7 +57,13 @@ class Localization {
     Map<String, String>? namedArgs,
     String? gender,
     Locale? locale,
+    bool translate = true,
   }) {
+    // Not translating: the key is used as the text itself (still formatted).
+    if (!translate) {
+      return _replaceArgs(_replaceNamedArgs(key, namedArgs), args);
+    }
+
     late String res;
     bool logMissingKeys = true;
     try {
@@ -158,8 +164,18 @@ class Localization {
     String? name,
     NumberFormat? format,
     Locale? locale,
+    bool translate = true,
   }) {
     late String res;
+
+    if (!translate) {
+      final formattedValue = format == null ? '$value' : format.format(value);
+      if (name != null) {
+        namedArgs = {...?namedArgs, name: formattedValue};
+      }
+      return _replaceArgs(
+          _replaceNamedArgs(key, namedArgs), args ?? [formattedValue]);
+    }
 
     final pLangCode = locale?.languageCode ?? _locale.languageCode;
     final pluralRule = _pluralRule(pLangCode, value);

@@ -53,6 +53,14 @@ abstract class PlayxLocalization {
     return removed;
   }
 
+  /// Loads translations for [locales] so they can be read synchronously with
+  /// `tr(locale: ...)`, for example to show one widget in English while the app
+  /// is in Arabic, without setting `preloadSupportedLocales` for all locales.
+  ///
+  /// The locales stay loaded when the app locale changes.
+  static Future<void> preloadLocales(Iterable<Locale> locales) =>
+      _controller.preloadLocales(locales);
+
   ///returns the current supported xLocales.
   static List<XLocale> get supportedXLocales => _controller.supportedXLocales;
 

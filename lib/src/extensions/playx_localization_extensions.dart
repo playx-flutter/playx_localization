@@ -17,15 +17,26 @@ extension PlayxLocalizationStringExtensions on String {
   /// [args] List of localized strings. Replaces {} left to right
   /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
   /// [gender] Gender switcher. Changes the localized string based on gender string
+  /// [locale] Translate to this locale instead of the current one. Works for the
+  /// current and fallback locales, any locale when `preloadSupportedLocales` is
+  /// enabled, or locales loaded with `PlayxLocalization.preloadLocales`.
+  /// [translate] When `false` the key is not looked up: it is returned as the
+  /// text itself, with [args] and [namedArgs] still applied.
   String tr({
     BuildContext? context,
     List<String>? args,
     Map<String, String>? namedArgs,
     String? gender,
     Locale? locale,
+    bool translate = true,
   }) =>
       ez.tr(this,
-          context: context, args: args, namedArgs: namedArgs, gender: gender, locale: locale);
+          context: context,
+          args: args,
+          namedArgs: namedArgs,
+          gender: gender,
+          locale: locale,
+          translate: translate);
 
   bool trExists() => ez.trExists(this);
 
@@ -38,6 +49,7 @@ extension PlayxLocalizationStringExtensions on String {
   /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
   /// [name] Name of number value. Replaces {$name} to value
   /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
+  /// [locale] and [translate]: see [tr].
   String plural(
     num value, {
     BuildContext? context,
@@ -46,6 +58,7 @@ extension PlayxLocalizationStringExtensions on String {
     String? name,
     NumberFormat? format,
     Locale? locale,
+    bool translate = true,
   }) =>
       ez.plural(
         this,
@@ -56,6 +69,7 @@ extension PlayxLocalizationStringExtensions on String {
         format: format,
         context: context,
         locale: locale,
+        translate: translate,
       );
 }
 
@@ -72,7 +86,8 @@ extension TextTranslateExtension on Text {
           BuildContext? context,
           Map<String, String>? namedArgs,
           String? gender,
-          Locale? locale}) =>
+          Locale? locale,
+          bool translate = true}) =>
       Text(
           ez.tr(
             data ?? '',
@@ -81,6 +96,7 @@ extension TextTranslateExtension on Text {
             gender: gender,
             context: context,
             locale: locale,
+            translate: translate,
           ),
           key: key,
           style: style,
@@ -104,6 +120,7 @@ extension TextTranslateExtension on Text {
     String? name,
     NumberFormat? format,
     Locale? locale,
+    bool translate = true,
   }) =>
       Text(
           ez.plural(
@@ -115,6 +132,7 @@ extension TextTranslateExtension on Text {
             name: name,
             format: format,
             locale: locale,
+            translate: translate,
           ),
           key: key,
           style: style,
@@ -159,13 +177,22 @@ extension BuildContextLocalizationExtension on BuildContext {
   /// Text(context.tr('msg_named', namedArgs: {'lang': 'Dart'}),   // namedArgs
   /// Text(context.tr('msg_mixed', args: ['Easy localization'], namedArgs: {'lang': 'Dart'}), // args and namedArgs
   /// Text(context.tr('gender', gender: _gender ? "female" : "male"), // gender
+  /// Text(context.tr('title', locale: const Locale('en'))), // always English
+  /// Text(context.tr('user_input', translate: false)), // not translated
   /// ```
+  ///
+  /// [locale] Translate to this locale instead of the current one. Works for the
+  /// current and fallback locales, any locale when `preloadSupportedLocales` is
+  /// enabled, or locales loaded with `PlayxLocalization.preloadLocales`.
+  /// [translate] When `false` the key is not looked up: it is returned as the
+  /// text itself, with [args] and [namedArgs] still applied.
   String tr(
     String key, {
     List<String>? args,
     Map<String, String>? namedArgs,
     String? gender,
     Locale? locale,
+    bool translate = true,
   }) {
     final localization = Localization.of(this);
 
@@ -179,6 +206,7 @@ extension BuildContextLocalizationExtension on BuildContext {
       namedArgs: namedArgs,
       gender: gender,
       locale: locale,
+      translate: translate,
     );
   }
 
@@ -200,6 +228,7 @@ extension BuildContextLocalizationExtension on BuildContext {
     String? name,
     NumberFormat? format,
     Locale? locale,
+    bool translate = true,
   }) {
     final localization = Localization.of(this);
 
@@ -215,6 +244,7 @@ extension BuildContextLocalizationExtension on BuildContext {
       name: name,
       format: format,
       locale: locale,
+      translate: translate,
     );
   }
 

@@ -181,7 +181,11 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     _translations = res.translations;
     _fallbackTranslations = res.fallbackTranslations;
     _preloadedTranslations = res.preloadedTranslations;
+    await _loadRequestedPreloads();
+    _syncLocalization(locale);
+  }
 
+  void _syncLocalization(XLocale locale) {
     Localization.load(
       locale.locale,
       translations: _translations,
@@ -191,6 +195,46 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
           config.useFallbackTranslationsForEmptyResources,
       ignorePluralRules: config.ignorePluralRules,
     );
+  }
+
+  /// Locales requested through [preloadLocales]. They are kept loaded across
+  /// locale changes and reloads.
+  final Set<XLocale> _requestedPreloads = {};
+
+  Future<void> _loadRequestedPreloads() async {
+    for (final xLocale in _requestedPreloads) {
+      if (_preloadedTranslations?.containsKey(xLocale.locale) ?? false) {
+        continue;
+      }
+      try {
+        final data =
+            await TranslationManager.loadTranslationData(locale: xLocale, config: config);
+        (_preloadedTranslations ??= {})[xLocale.locale] =
+            Translations(Map.from(data));
+      } catch (e, s) {
+        logger?.error('Error preloading ${xLocale.locale}: ',
+            error: e, stackTrace: s);
+      }
+    }
+  }
+
+  /// Loads translations for [locales] so they can be used synchronously with
+  /// `tr(locale: ...)`, without enabling `config.preloadSupportedLocales` for
+  /// every locale. Locales that are not supported by the config are ignored.
+  Future<void> preloadLocales(Iterable<Locale> locales) async {
+    for (final locale in locales) {
+      final xLocale = supportedXLocales
+          .firstWhereOrNull((e) => e.locale.supports(locale));
+      if (xLocale == null) {
+        logger?.warning('Cannot preload $locale: not in the supported locales.');
+        continue;
+      }
+      _requestedPreloads.add(xLocale);
+    }
+    final current = value;
+    if (current == null) return;
+    await _loadRequestedPreloads();
+    _syncLocalization(current);
   }
 
   /// Reloads the translations of the current locale and notifies listeners.

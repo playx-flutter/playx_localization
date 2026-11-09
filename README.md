@@ -107,6 +107,33 @@ dart run playx_localization:validate --base ar --src lib --strict
 - **Warnings:** extra keys, empty values, and with `--src <dir>` keys never used in your Dart code (as a string literal or a generated constant). `--strict` turns warnings into errors.
 - Add it to CI next to `dart run playx_localization:generate --check`.
 
+### Not Translating a Key
+Pass `translate: false` to use the text as-is, for example for text that may or may not be a translation key. `args` and `namedArgs` are still applied.
+
+```dart
+'title'.tr(translate: false);                              // 'title'
+'Hi {name}'.tr(translate: false, namedArgs: {'name': 'Sam'}); // 'Hi Sam'
+Text('title').tr(translate: false);
+context.tr('title', translate: false);
+```
+
+### Using a Different Locale for One Key
+Every `tr` / `plural` variant (`'key'.tr`, `Text.tr`, `context.tr`) accepts a `locale`, so you can show one piece of UI in English while the app is in Arabic:
+
+```dart
+'title'.tr(locale: const Locale('en'));
+context.tr('title', locale: const Locale('en'));
+'item'.plural(3, locale: const Locale('en'));
+```
+
+The locale must be loaded, because lookups are synchronous. The current and fallback locales always are. For others, either set `preloadSupportedLocales: true` in the config, or load only what you need:
+
+```dart
+await PlayxLocalization.preloadLocales([const Locale('en'), const Locale('fr')]);
+```
+
+Preloaded locales stay loaded when the app locale changes. Locales that are not loaded return the key.
+
 ### Note on iOS
 To enable translation on iOS devices, add supported locales to `ios/Runner/Info.plist` as described [here](https://flutter.dev/docs/development/accessibility-and-localization/internationalization#specifying-supportedlocales).
 
