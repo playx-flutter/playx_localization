@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:playx_localization/playx_localization.dart';
-import 'package:playx_localization/src/easy_localization/file_loaders/file_loader.dart';
-import 'package:playx_localization/src/easy_localization/linked_file_resolver.dart';
 import 'package:playx_localization/src/tools/translation_files.dart';
 
 class MapFileLoader implements FileLoader {

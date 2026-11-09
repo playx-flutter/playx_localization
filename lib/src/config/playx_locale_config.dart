@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../playx_localization.dart';
-import '../easy_localization/file_loaders/root_bundle_file_loader.dart';
-import '../easy_localization/linked_file_resolver.dart';
 
 /// Locale config :
 /// used to configure out app locales by providing the app with the supported locales and localization settings.

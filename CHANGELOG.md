@@ -16,6 +16,7 @@
 - **Localized digits in plurals**: New `PlayxLocaleConfig.localizePluralDigits` and `plural(localizeDigits: ...)` show the count as `٣` instead of `3` in Arabic (and other digit systems). A custom `format` still takes precedence.
 - **Fix**: Decimal counts were rounded before choosing the plural form (`1.4` was treated as singular).
 - **Validator**: warns when a plural group misses forms its language uses (for example Arabic `few` / `many`). `pluralCategoriesFor` is used for this.
+- **Custom asset loaders are easier**: `AssetLoader`'s `fileLoader` and `linkedFileResolver` are now optional, so a custom loader (CSV, YAML, HTTP, ...) only has to implement `load`. `FileLoader`, `RootBundleFileLoader` and `LinkedFileResolver` are exported.
 - **`translate` option**: `tr` and `plural` (String, `Text` and `BuildContext` variants) accept `translate: false` to return the text as-is, still applying `args` / `namedArgs`.
 - **`preloadLocales`**: New `PlayxLocalization.preloadLocales` loads only the locales you need so `tr(locale: ...)` works for them without enabling `preloadSupportedLocales` for all locales.
 - `tr` with a `BuildContext` now falls back to the global instance when no `Localization` is found in the context, instead of throwing.

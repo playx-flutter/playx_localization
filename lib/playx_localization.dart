@@ -18,3 +18,6 @@ export 'package:playx_localization/src/easy_localization/translation_source.dart
     show PlayxTranslationSource;
 export 'package:playx_localization/src/storage/locale_storage.dart';
 export 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
+export 'package:playx_localization/src/easy_localization/file_loaders/file_loader.dart';
+export 'package:playx_localization/src/easy_localization/file_loaders/root_bundle_file_loader.dart';
+export 'package:playx_localization/src/easy_localization/linked_file_resolver.dart';

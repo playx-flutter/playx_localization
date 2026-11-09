@@ -3,32 +3,40 @@ import 'dart:ui';
 
 import '../../playx_localization.dart';
 import '../controller/controller.dart';
-import 'file_loaders/file_loader.dart';
 import 'file_loaders/io_file_loader.dart';
-import 'file_loaders/root_bundle_file_loader.dart';
-import 'linked_file_resolver.dart';
 
-/// abstract class used to building your Custom AssetLoader
+/// Base class for building your own asset loader, for example to read other
+/// file formats or to fetch translations from the network.
+///
+/// [fileLoader] and [linkedFileResolver] are only used by loaders that read
+/// files and resolve `":/linked.json"` references (like [RootBundleAssetLoader]).
+/// A custom loader does not need them.
+///
 /// Example:
-/// ```
-///class FileAssetLoader extends AssetLoader {
-///  @override
-///  Future<Map<String, dynamic>> load(String path, Locale locale) async {
-///    final file = File(path);
-///    return json.decode(await file.readAsString());
-///  }
-///}
+/// ```dart
+/// class HttpAssetLoader extends AssetLoader {
+///   const HttpAssetLoader();
+///
+///   @override
+///   Future<Map<String, dynamic>?> load(String path, Locale locale) async {
+///     final response = await http.get(Uri.parse('$path/${locale.languageCode}.json'));
+///     return json.decode(response.body) as Map<String, dynamic>;
+///   }
+/// }
 /// ```
 abstract class AssetLoader {
-  // Place inside class RootBundleAssetLoader
   final FileLoader fileLoader;
   final LinkedFileResolver linkedFileResolver;
 
   const AssetLoader({
-    required this.linkedFileResolver,
-    required this.fileLoader,
+    this.linkedFileResolver = const JsonLinkedFileResolver(
+      fileLoader: RootBundleFileLoader(),
+    ),
+    this.fileLoader = const RootBundleFileLoader(),
   });
 
+  /// Loads the translations of [locale] from [path].
+  /// Throwing means the locale could not be loaded.
   Future<Map<String, dynamic>?> load(String path, Locale locale);
 }
 

@@ -1,7 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:playx_localization/playx_localization.dart';
-import 'package:playx_localization/src/easy_localization/file_loaders/file_loader.dart';
-import 'package:playx_localization/src/easy_localization/linked_file_resolver.dart';
 
 class _NoFiles extends FileLoader {
   @override
