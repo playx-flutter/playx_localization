@@ -34,7 +34,7 @@ PluralCase _default_rule() => OTHER;
 void startRuleEvaluation(num howMany, [int? precision = 0]) {
   _n = howMany;
   _precision = precision;
-  _i = _n.round();
+  _i = _n.truncate();
   _updateVF(_n);
   _updateWT(_f, _v);
 }
@@ -554,8 +554,29 @@ final pluralRules = {
   'zh_HK': _default_rule,
   'zh_TW': _default_rule,
   'zu': _hi_rule,
-  'default': _default_rule
+  'default': _default_rule,
 };
 
 /// Do we have plural rules specific to [locale]
 bool localeHasPluralRules(String locale) => pluralRules.containsKey(locale);
+
+/// The plural categories [languageCode] uses, e.g. `{one, other}` for English
+/// and `{zero, one, two, few, many, other}` for Arabic.
+///
+/// Found by evaluating the language's rule for typical counts, so categories
+/// that only apply to huge numbers (such as French `many`) are not included.
+/// Languages without rules only use [PluralCase.OTHER].
+Set<PluralCase> pluralCategoriesFor(String languageCode) {
+  final rule = pluralRules[languageCode];
+  if (rule == null) return {PluralCase.OTHER};
+  final categories = <PluralCase>{};
+  for (var n = 0; n <= 1000; n++) {
+    startRuleEvaluation(n, 0);
+    categories.add(rule());
+  }
+  for (final n in [0.5, 1.5, 2.5, 10.5]) {
+    startRuleEvaluation(n, null);
+    categories.add(rule());
+  }
+  return categories;
+}

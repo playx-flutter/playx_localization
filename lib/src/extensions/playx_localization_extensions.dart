@@ -17,15 +17,27 @@ extension PlayxLocalizationStringExtensions on String {
   /// [args] List of localized strings. Replaces {} left to right
   /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
   /// [gender] Gender switcher. Changes the localized string based on gender string
+  /// [locale] Translate to this locale instead of the current one. Works for the
+  /// current and fallback locales, any locale when `preloadSupportedLocales` is
+  /// enabled, or locales loaded with `PlayxLocalization.preloadLocales`.
+  /// [translate] When `false` the key is not looked up: it is returned as the
+  /// text itself, with [args] and [namedArgs] still applied.
   String tr({
     BuildContext? context,
     List<String>? args,
     Map<String, String>? namedArgs,
     String? gender,
     Locale? locale,
-  }) =>
-      ez.tr(this,
-          context: context, args: args, namedArgs: namedArgs, gender: gender, locale: locale);
+    bool translate = true,
+  }) => ez.tr(
+    this,
+    context: context,
+    args: args,
+    namedArgs: namedArgs,
+    gender: gender,
+    locale: locale,
+    translate: translate,
+  );
 
   bool trExists() => ez.trExists(this);
 
@@ -36,8 +48,11 @@ extension PlayxLocalizationStringExtensions on String {
   /// [value] Number value for pluralization
   /// [args] List of localized strings. Replaces {} left to right
   /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
-  /// [name] Name of number value. Replaces {$name} to value
+  /// [name] Name of number value. Replaces `{name}` with the number
   /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
+  /// [locale] and [translate]: see [tr].
+  /// [localizeDigits] Shows the count in the digits of the locale (`٣` instead
+  /// of `3` in Arabic). Defaults to the config `localizePluralDigits`.
   String plural(
     num value, {
     BuildContext? context,
@@ -46,17 +61,20 @@ extension PlayxLocalizationStringExtensions on String {
     String? name,
     NumberFormat? format,
     Locale? locale,
-  }) =>
-      ez.plural(
-        this,
-        value,
-        args: args,
-        namedArgs: namedArgs,
-        name: name,
-        format: format,
-        context: context,
-        locale: locale,
-      );
+    bool translate = true,
+    bool? localizeDigits,
+  }) => ez.plural(
+    this,
+    value,
+    args: args,
+    namedArgs: namedArgs,
+    name: name,
+    format: format,
+    context: context,
+    locale: locale,
+    translate: translate,
+    localizeDigits: localizeDigits,
+  );
 }
 
 /// Text widget extension method for access to [tr()] and [plural()]
@@ -67,33 +85,36 @@ extension PlayxLocalizationStringExtensions on String {
 /// ```
 extension TextTranslateExtension on Text {
   /// {@macro tr}
-  Text tr(
-          {List<String>? args,
-          BuildContext? context,
-          Map<String, String>? namedArgs,
-          String? gender,
-          Locale? locale}) =>
-      Text(
-          ez.tr(
-            data ?? '',
-            args: args,
-            namedArgs: namedArgs,
-            gender: gender,
-            context: context,
-            locale: locale,
-          ),
-          key: key,
-          style: style,
-          strutStyle: strutStyle,
-          textAlign: textAlign,
-          textDirection: textDirection,
-          locale: locale,
-          softWrap: softWrap,
-          overflow: overflow,
-          textScaler: textScaler,
-          maxLines: maxLines,
-          semanticsLabel: semanticsLabel,
-          textWidthBasis: textWidthBasis);
+  Text tr({
+    List<String>? args,
+    BuildContext? context,
+    Map<String, String>? namedArgs,
+    String? gender,
+    Locale? locale,
+    bool translate = true,
+  }) => Text(
+    ez.tr(
+      data ?? '',
+      args: args,
+      namedArgs: namedArgs,
+      gender: gender,
+      context: context,
+      locale: locale,
+      translate: translate,
+    ),
+    key: key,
+    style: style,
+    strutStyle: strutStyle,
+    textAlign: textAlign,
+    textDirection: textDirection,
+    locale: locale ?? this.locale,
+    softWrap: softWrap,
+    overflow: overflow,
+    textScaler: textScaler,
+    maxLines: maxLines,
+    semanticsLabel: semanticsLabel,
+    textWidthBasis: textWidthBasis,
+  );
 
   /// {@macro plural}
   Text plural(
@@ -104,30 +125,34 @@ extension TextTranslateExtension on Text {
     String? name,
     NumberFormat? format,
     Locale? locale,
-  }) =>
-      Text(
-          ez.plural(
-            data ?? '',
-            context: context,
-            value,
-            args: args,
-            namedArgs: namedArgs,
-            name: name,
-            format: format,
-            locale: locale,
-          ),
-          key: key,
-          style: style,
-          strutStyle: strutStyle,
-          textAlign: textAlign,
-          textDirection: textDirection,
-          locale: locale,
-          softWrap: softWrap,
-          overflow: overflow,
-          textScaler: textScaler,
-          maxLines: maxLines,
-          semanticsLabel: semanticsLabel,
-          textWidthBasis: textWidthBasis);
+    bool translate = true,
+    bool? localizeDigits,
+  }) => Text(
+    ez.plural(
+      data ?? '',
+      context: context,
+      value,
+      args: args,
+      namedArgs: namedArgs,
+      name: name,
+      format: format,
+      locale: locale,
+      translate: translate,
+      localizeDigits: localizeDigits,
+    ),
+    key: key,
+    style: style,
+    strutStyle: strutStyle,
+    textAlign: textAlign,
+    textDirection: textDirection,
+    locale: locale ?? this.locale,
+    softWrap: softWrap,
+    overflow: overflow,
+    textScaler: textScaler,
+    maxLines: maxLines,
+    semanticsLabel: semanticsLabel,
+    textWidthBasis: textWidthBasis,
+  );
 }
 
 extension BuildContextLocalizationExtension on BuildContext {
@@ -159,13 +184,22 @@ extension BuildContextLocalizationExtension on BuildContext {
   /// Text(context.tr('msg_named', namedArgs: {'lang': 'Dart'}),   // namedArgs
   /// Text(context.tr('msg_mixed', args: ['Easy localization'], namedArgs: {'lang': 'Dart'}), // args and namedArgs
   /// Text(context.tr('gender', gender: _gender ? "female" : "male"), // gender
+  /// Text(context.tr('title', locale: const Locale('en'))), // always English
+  /// Text(context.tr('user_input', translate: false)), // not translated
   /// ```
+  ///
+  /// [locale] Translate to this locale instead of the current one. Works for the
+  /// current and fallback locales, any locale when `preloadSupportedLocales` is
+  /// enabled, or locales loaded with `PlayxLocalization.preloadLocales`.
+  /// [translate] When `false` the key is not looked up: it is returned as the
+  /// text itself, with [args] and [namedArgs] still applied.
   String tr(
     String key, {
     List<String>? args,
     Map<String, String>? namedArgs,
     String? gender,
     Locale? locale,
+    bool translate = true,
   }) {
     final localization = Localization.of(this);
 
@@ -179,6 +213,7 @@ extension BuildContextLocalizationExtension on BuildContext {
       namedArgs: namedArgs,
       gender: gender,
       locale: locale,
+      translate: translate,
     );
   }
 
@@ -187,10 +222,10 @@ extension BuildContextLocalizationExtension on BuildContext {
   /// Throws exception if [Localization] was not found.
   ///
   /// [key] Localization key
-  /// [value] Number value for pluralization
+  /// `number` Number value for pluralization
   /// [args] List of localized strings. Replaces {} left to right
   /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
-  /// [name] Name of number value. Replaces {$name} to value
+  /// [name] Name of number value. Replaces `{name}` with the number
   /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
   String plural(
     String key,
@@ -200,6 +235,8 @@ extension BuildContextLocalizationExtension on BuildContext {
     String? name,
     NumberFormat? format,
     Locale? locale,
+    bool translate = true,
+    bool? localizeDigits,
   }) {
     final localization = Localization.of(this);
 
@@ -215,6 +252,8 @@ extension BuildContextLocalizationExtension on BuildContext {
       name: name,
       format: format,
       locale: locale,
+      translate: translate,
+      localizeDigits: localizeDigits,
     );
   }
 
@@ -243,7 +282,7 @@ extension BuildContextLocalizationExtension on BuildContext {
   bool get isCurrentLocaleEnglish => currentLanguageCode == 'en';
 
   /// Returns true if the current locale is RTL (e.g., Arabic, Hebrew).
-  bool get isCurrentLocaleRtl => Bidi.hasAnyRtl(currentLanguageCode);
+  bool get isCurrentLocaleRtl => Bidi.isRtlLanguage(currentLanguageCode);
 
   /// Returns true if the current locale is LTR.
   bool get isCurrentLocaleLtr => !isCurrentLocaleRtl;

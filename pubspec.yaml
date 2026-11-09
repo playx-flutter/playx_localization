@@ -1,8 +1,9 @@
 name: playx_localization
 description: Easily manage and update app localization with a simple implementation and a lot of utilities.
-version: 0.4.0
+version: 1.0.0
 homepage: https://sourcya.io
 repository: https://github.com/playx-flutter/playx_localization
+documentation: https://playx-flutter.github.io/playx_localization/
 issue_tracker: https://github.com/playx-flutter/playx_localization/issues
 topics:
   - playx
@@ -10,16 +11,20 @@ topics:
   - translation
   - internationalization
 
+executables:
+  generate: generate
+  validate: validate
+
 environment:
-  sdk: ">=3.5.0 <4.0.0"
-  flutter: ">=3.27.0"
+  sdk: ">=3.12.0 <4.0.0"
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  playx_core: ^1.0.0
+  playx_core: ^2.0.0
   intl:  ^0.20.2
   shared_preferences_platform_interface: ^2.4.2
 

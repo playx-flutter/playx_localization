@@ -4,6 +4,7 @@ import 'package:playx_localization/src/extensions/locale_extensions.dart';
 import 'package:playx_localization/src/model/x_locale.dart';
 
 import 'config/playx_locale_config.dart';
+import 'easy_localization/translation_source.dart';
 
 /// PlayxLocalization :
 /// Used to update current app locale with id, index, device locale and more.
@@ -19,13 +20,46 @@ abstract class PlayxLocalization {
   ///Setup the current app locales with your configuration.
   ///And loads app supported translations.
   /// Must be called before calling any other method to initialize dependencies.
-  static Future<void> boot({
-    required PlayxLocaleConfig config,
-  }) async {
+  static Future<void> boot({required PlayxLocaleConfig config}) async {
     WidgetsFlutterBinding.ensureInitialized();
     final controller = PlayxLocaleController(config: config);
     return controller.boot();
   }
+
+  /// Registers translations contributed by another package (or any other
+  /// source) so they are merged into the app's translations.
+  ///
+  /// Can be called before or after [boot]. When called after, the current
+  /// locale is reloaded right away. Keys defined by the app always override
+  /// keys from registered sources. See [PlayxTranslationSource].
+  ///
+  /// Registering a source with an existing id replaces the previous one.
+  static Future<void> registerTranslations(
+    PlayxTranslationSource source,
+  ) async {
+    TranslationSourceRegistry.register(source);
+    if (PlayxLocaleController.isBooted) {
+      await _controller.reloadTranslations();
+    }
+  }
+
+  /// Removes a source registered with [registerTranslations].
+  /// Returns `false` if no source with [id] was registered.
+  static Future<bool> unregisterTranslations(String id) async {
+    final removed = TranslationSourceRegistry.unregister(id);
+    if (removed && PlayxLocaleController.isBooted) {
+      await _controller.reloadTranslations();
+    }
+    return removed;
+  }
+
+  /// Loads translations for [locales] so they can be read synchronously with
+  /// `tr(locale: ...)`, for example to show one widget in English while the app
+  /// is in Arabic, without setting `preloadSupportedLocales` for all locales.
+  ///
+  /// The locales stay loaded when the app locale changes.
+  static Future<void> preloadLocales(Iterable<Locale> locales) =>
+      _controller.preloadLocales(locales);
 
   ///returns the current supported xLocales.
   static List<XLocale> get supportedXLocales => _controller.supportedXLocales;
@@ -41,7 +75,8 @@ abstract class PlayxLocalization {
     final value = _controller.value;
     if (value == null) {
       throw Exception(
-          'Localization has not been initialized. You must call boot method before accessing any property.');
+        'Localization has not been initialized. You must call boot method before accessing any property.',
+      );
     }
     return value;
   }
@@ -56,15 +91,15 @@ abstract class PlayxLocalization {
   static bool get isDeviceLocaleSelected => _controller.isDeviceLocaleSelected;
 
   /// Returns the current fallback Locale that is used in the app.
-  /// If [useFallbackTranslations] in config is false, it will return null.
+  /// If `useFallbackTranslations` in config is false, it will return null.
   /// Else it will return the fallback locale based on config.
   /// If no fallback locale is found, it will use english locale if found.
   /// If no english locale is found, it will return the first locale in the supported locales list.
   /// If no supported locales are found, it will return null.
   static XLocale? get fallbackLocale =>
       _controller.config.useFallbackTranslations
-          ? _controller.getFallbackLocale()
-          : null;
+      ? _controller.getFallbackLocale()
+      : null;
 
   /// Switch the locale to the next in the supported locales list
   /// if there is no next locale, it will switch to the first one
@@ -84,18 +119,27 @@ abstract class PlayxLocalization {
       _controller.updateById(id, forceAppUpdate: forceAppUpdate);
 
   /// update the locale by language code and country code if available.
-  static Future<bool> updateByLanguageCode(
-          {required String languageCode,
-          String? countryCode,
-          bool forceAppUpdate = false}) =>
-      _controller.updateByLanguageCode(
-          languageCode: languageCode,
-          countryCode: countryCode,
-          forceAppUpdate: forceAppUpdate);
+  static Future<bool> updateByLanguageCode({
+    required String languageCode,
+    String? countryCode,
+    String? scriptCode,
+    bool forceAppUpdate = false,
+  }) => _controller.updateByLanguageCode(
+    languageCode: languageCode,
+    countryCode: countryCode,
+    scriptCode: scriptCode,
+    forceAppUpdate: forceAppUpdate,
+  );
 
   /// Updates the locale to current device locale.
   static Future<bool> updateToDeviceLocale({bool forceAppUpdate = false}) =>
       _controller.updateToDeviceLocale(forceAppUpdate: forceAppUpdate);
+
+  /// Forgets the saved locale and switches to the locale the app would start
+  /// with on a fresh install: `startLocale`, else the device locale, else the
+  /// fallback locale. The result is not saved.
+  static Future<void> resetLocale({bool forceAppUpdate = false}) =>
+      _controller.resetLocale(forceAppUpdate: forceAppUpdate);
 
   ///Check if current locale is arabic.
   static bool isCurrentLocaleArabic() => _controller.isCurrentLocaleArabic();
@@ -107,7 +151,7 @@ abstract class PlayxLocalization {
   static bool isCurrentLocaleRtl() => _controller.isCurrentLocaleRtl();
 
   /// Convert current [locale] to String with custom [separator] representing language code and country code.
-  String currentLocaleToString({String separator = '_'}) =>
+  static String currentLocaleToString({String separator = '_'}) =>
       _controller.currentLocaleToString(separator: separator);
 
   ///delete saved locale from device storage.

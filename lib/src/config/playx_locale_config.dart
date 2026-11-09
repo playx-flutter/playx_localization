@@ -1,9 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
 
 import '../../playx_localization.dart';
-import '../easy_localization/file_loaders/root_bundle_file_loader.dart';
-import '../easy_localization/linked_file_resolver.dart';
 
 /// Locale config :
 /// used to configure out app locales by providing the app with the supported locales and localization settings.
@@ -71,23 +68,44 @@ class PlayxLocaleConfig {
   /// @Default value false
   final bool useFallbackTranslationsForEmptyResources;
 
-  /// Ignore usage of plural strings for languages that do not use plural rules.
-  /// @Default value true
+  /// Ignore the plural rules of the language.
+  ///
+  /// By default `plural` uses the rules of the language, so Arabic can have
+  /// separate `one`, `two`, `few` (3-10), `many` (11-99) and `other` forms, and
+  /// Russian `one`, `few` and `many`. An exact `zero`, `one` or `two` form
+  /// always wins for 0, 1 and 2. Missing forms fall back to `other`.
+  ///
+  /// Set it to `true` to only ever use `zero`, `one`, `two` and `other`.
+  /// @Default value false
   final bool ignorePluralRules;
+
+  /// Show the count of `plural` in the digits of the current locale, so
+  /// `{} مركبات` becomes `٣ مركبات` in Arabic instead of `3 مركبات`.
+  /// Can be overridden per call with `plural(localizeDigits: ...)`.
+  /// @Default value false
+  final bool localizePluralDigits;
 
   /// Class loader for localization files that belong to other packages.
   /// @Default value `null`
   final List<AssetLoader>? extraAssetLoaders;
 
   /// When true, all supported locales are preloaded into memory when the controller initializes.
-  /// This allows translating to arbitrary locales synchronously using `tr(locale: ...)` without 
+  /// This allows translating to arbitrary locales synchronously using `tr(locale: ...)` without
   /// updating the app locale. Warning: Doing this might consume more memory if there are many locales.
   final bool preloadSupportedLocales;
 
   /// Custom localization delegate builder.
   /// This allows you to create a custom list of delegates based on the provided [PlayxLocalizationDelegate].
   final List<LocalizationsDelegate> Function(
-      PlayxLocalizationDelegate delegate)? customLocalizationDelegateBuilder;
+    PlayxLocalizationDelegate delegate,
+  )?
+  customLocalizationDelegateBuilder;
+
+  /// Where the selected locale is saved when [saveLocale] is true.
+  ///
+  /// Defaults to [PlayxPrefsLocaleStorage] (SharedPreferencesAsync). Provide
+  /// your own [PlayxLocaleStorage] to save it elsewhere.
+  final PlayxLocaleStorage storage;
 
   PlayxLocaleConfig({
     required this.supportedLocales,
@@ -96,22 +114,24 @@ class PlayxLocaleConfig {
     this.useOnlyLangCode = false,
     this.useFallbackTranslations = true,
     this.useFallbackTranslationsForEmptyResources = false,
-    this.ignorePluralRules = true,
+    this.ignorePluralRules = false,
+    this.localizePluralDigits = false,
     this.preloadSupportedLocales = false,
     this.path = 'assets/translations',
     this.assetLoader = const RootBundleAssetLoader(
       fileLoader: RootBundleFileLoader(),
-      linkedFileResolver:
-          JsonLinkedFileResolver(fileLoader: RootBundleFileLoader()),
+      linkedFileResolver: JsonLinkedFileResolver(
+        fileLoader: RootBundleFileLoader(),
+      ),
     ),
     this.extraAssetLoaders,
     this.saveLocale = true,
     this.logMissingKeys = false,
     this.logLocaleChanges = true,
     this.migratePrefsToAsync = false,
+    this.storage = const PlayxPrefsLocaleStorage(),
     this.extraDelegates,
     this.customLocalizationDelegateBuilder,
-  })  : assert(path.isNotEmpty, 'path can not be empty'),
-        assert(
-            supportedLocales.isNotEmpty, 'supportedLocales can not be empty');
+  }) : assert(path.isNotEmpty, 'path can not be empty'),
+       assert(supportedLocales.isNotEmpty, 'supportedLocales can not be empty');
 }

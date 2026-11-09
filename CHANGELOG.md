@@ -1,5 +1,45 @@
 # Changelog
 
+## 1.0.0
+> **Note**: First stable release. Raises the minimum supported SDK versions (Dart 3.12, Flutter 3.44). Existing saved locales, translation files named in the old script-code order, and linked-file folders are migrated automatically; see the entries below.
+
+- **Breaking**: Requires Dart `>=3.12.0` and Flutter `>=3.44.0`.
+- Updated `playx_core` dependency to `^2.0.0` and upgraded all dependencies to their latest versions.
+- **Translations from other packages**: Added `PlayxLocalization.registerTranslations` / `unregisterTranslations` and `PlayxTranslationSource` (with a `.package` constructor) so packages can ship their own translations. Supports optional key `namespace`, works before or after boot, tolerates missing locales, and is always overridden by the app's own keys.
+- **Key generator**: New `dart run playx_localization:generate` command generates a class of typed key constants from a base translation file (nested keys, linked files, plural groups, `--check` for CI).
+- **Validator**: New `dart run playx_localization:validate` command reports missing/extra keys, placeholder mismatches, plural groups without `other`, empty values, unused keys (`--src`), invalid JSON and broken linked files. Exits non-zero on errors (or warnings with `--strict`).
+- **Script code naming follows BCP-47 (with migration)**: Locales with both a script and a country code are now written `language-script-country` (e.g. `zh-Hant-TW`) by `Locale.toStringWithSeparator`, matching `Locale.toLanguageTag()`. Translation files are looked up as `zh-Hant-TW.json` first, then as the old `zh-TW-Hant.json` (with a log message to rename it). Linked files are looked up in the `zh-Hant-TW/` folder first, then in the old `zh-TW/` folder that ignored the script. Locales without a script, or without a country, are unchanged. Added `Locale.toLegacyStringWithSeparator`. The command line tools understand both file name orders.
+- **Note for custom `LinkedFileResolver` subclasses**: `resolveLinkedFiles` has a new optional `scriptCode` parameter.
+- **Fix**: `DateTime.toFormattedDate` / `toFormattedTime` used only the language code, so `de-AT` got `de` month names. They now use the full locale tag (still overridable with `locale`).
+- `PlayxLocalizationDelegate` is now exported, so the callback of `customLocalizationDelegateBuilder` can be typed. Added `PlayxLocalization.resetLocale`.
+- **Plurals follow the language's rules by default (nouns with numbers)**: `plural()` now picks `one`, `two`, `few`, `many` or `other` with the plural rules of the language, so Arabic (`مركبة` / `مركبتان` / `٣ مركبات` / `١١ مركبة`) and Russian work with a single entry. An exact `zero` / `one` / `two` form still wins for 0, 1 and 2, and missing forms fall back to `other`, so existing entries keep working. `ignorePluralRules` now defaults to `false`; set it to `true` to keep only `zero`, `one`, `two` and `other`.
+- **Localized digits in plurals**: New `PlayxLocaleConfig.localizePluralDigits` and `plural(localizeDigits: ...)` show the count as `٣` instead of `3` in Arabic (and other digit systems). A custom `format` still takes precedence.
+- **Fix**: Decimal counts were rounded before choosing the plural form (`1.4` was treated as singular).
+- **Validator**: warns when a plural group misses forms its language uses (for example Arabic `few` / `many`). `pluralCategoriesFor` is used for this.
+- **Custom asset loaders are easier**: `AssetLoader`'s `fileLoader` and `linkedFileResolver` are now optional, so a custom loader (CSV, YAML, HTTP, ...) only has to implement `load`. `FileLoader`, `RootBundleFileLoader` and `LinkedFileResolver` are exported.
+- **Documentation site**: Guides and the API reference are published to GitHub Pages at https://playx-flutter.github.io/playx_localization/. The README is now a short overview that links to them.
+- **CI**: New build workflow (tests on the minimum and latest Flutter, format, analyze, 90% coverage gate, command line tools check, publish dry run) and a docs workflow.
+- **`translate` option**: `tr` and `plural` (String, `Text` and `BuildContext` variants) accept `translate: false` to return the text as-is, still applying `args` / `namedArgs`.
+- **`preloadLocales`**: New `PlayxLocalization.preloadLocales` loads only the locales you need so `tr(locale: ...)` works for them without enabling `preloadSupportedLocales` for all locales.
+- `tr` with a `BuildContext` now falls back to the global instance when no `Localization` is found in the context, instead of throwing.
+- **Locale saved by id (with migration)**: The selected locale is now saved by its `XLocale.id` instead of its position in `supportedLocales`, so reordering, inserting or removing locales in an app update no longer restores the wrong language. Existing installs migrate automatically: a saved index is read when no id exists yet, then rewritten as an id (the index is still written, so downgrades keep working). A saved locale that was removed falls back to `startLocale` / the device locale instead of a different language. The device-sync flag (`-1`) keeps working.
+- **Pluggable storage**: Added `PlayxLocaleConfig.storage` with `PlayxLocaleStorage`, `PlayxPrefsLocaleStorage` (default) and `PlayxMemoryLocaleStorage`, like `playx_theme`. Writes are queued so the last requested locale is always the last one saved.
+- **`resetLocale` forgets the saved choice**: it now clears the saved locale and applies the fresh-install locale (`startLocale`, device, fallback) without saving it. Before, it saved that result as an explicit choice.
+- `getLastSavedIndexFromPrefs` is deprecated.
+- **Fix**: `config.useFallbackTranslations` was ignored; the fallback locale was always loaded. It is now respected.
+- **Fix**: A failed locale switch (for example a missing translation file) no longer wipes the loaded translations, changes the locale or saves it. `updateTo`, `updateById`, etc. now return `false` and keep the current locale. `loadTranslations` now returns a `bool`.
+- **Fix**: One missing or broken locale file no longer breaks `preloadSupportedLocales` for all locales.
+- **Fix**: Looking up a key that points to a group (e.g. `'home'` when `home` is an object) crashed; a path through a text value (`'a.b.c'` where `a.b` is text) returned the wrong text. Both now behave like a missing key.
+- **Fix**: `namedArgs` whose names contain regex characters (e.g. `{a.b}`, `{x+y}`) were not replaced.
+- **Fix**: `@:key` links are now resolved in the locale passed to `tr(locale: ...)` instead of the current locale, and the `@.capitalize:` modifier no longer crashes on empty text.
+- **Fix**: `PlayxLocalization.currentLocaleToString` was not `static`, so it could not be called. `PlayxLocalization.updateByLanguageCode` now accepts `scriptCode`.
+- **Fix**: `context.isCurrentLocaleRtl` / `isCurrentLocaleLtr` always reported LTR because they analyzed the language code as text.
+- **Fix**: `Text(...).tr()` and `.plural()` dropped the original `Text.locale`.
+- The optional base-language fallback file (e.g. `en` for `en-US`) is now merged recursively and any load failure for it is ignored.
+- **Fix**: Linking the same translation file from multiple keys is no longer reported as a cyclic link. Only real cycles throw now.
+- Added a unit test suite covering plural rules, translations, linked file resolution, translation merging, device-sync persistence, `scriptCode` locale matching, and the string, number and locale extensions.
+- Fixed analyzer lints.
+
 ## 0.4.0
 - **Enhanced Locale Config**: Added `useFallbackTranslationsForEmptyResources`, `ignorePluralRules`, `extraAssetLoaders`, and `errorWidget` to `PlayxLocaleConfig`.
 - **Script Code Support**: Added `scriptCode` natively to `XLocale` and updated locale matching in `PlayxLocaleController` to properly utilize it.

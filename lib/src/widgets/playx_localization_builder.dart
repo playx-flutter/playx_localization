@@ -7,10 +7,7 @@ import 'package:playx_localization/src/controller/controller.dart';
 /// It should rebuild the widget automatically after changing the locale.
 class PlayxLocalizationBuilder extends StatelessWidget {
   /// The builder function that will be called when the locale changes.
-  final Widget Function(
-    BuildContext context,
-    XLocale xLocale,
-  ) builder;
+  final Widget Function(BuildContext context, XLocale xLocale) builder;
 
   const PlayxLocalizationBuilder({super.key, required this.builder});
 
@@ -23,14 +20,16 @@ class PlayxLocalizationBuilder extends StatelessWidget {
       builder: (context, XLocale? xLocale, child) {
         if (xLocale == null) {
           throw Exception(
-              'Localization has not been initialized. You must call boot method before accessing any property.');
+            'Localization has not been initialized. You must call boot method before accessing any property.',
+          );
         }
         return PlayxInheritedLocalization(
           locale: xLocale,
           child: Localizations(
-              locale: xLocale.locale,
-              delegates: controller.delegates,
-              child: builder(context, xLocale)),
+            locale: xLocale.locale,
+            delegates: controller.delegates,
+            child: builder(context, xLocale),
+          ),
         );
       },
     );

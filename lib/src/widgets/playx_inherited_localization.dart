@@ -18,7 +18,8 @@ class PlayxInheritedLocalization extends InheritedWidget {
     final res = maybeOf(context);
     if (res == null) {
       throw Exception(
-          'PlayxInheritedLocalization not found in context. Make sure PlayxLocalizationBuilder is above the widget tree.');
+        'PlayxInheritedLocalization not found in context. Make sure PlayxLocalizationBuilder is above the widget tree.',
+      );
     }
     return res;
   }

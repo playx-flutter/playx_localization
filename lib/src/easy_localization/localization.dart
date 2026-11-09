@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:intl/intl.dart';
 import 'package:playx_localization/playx_localization.dart';
 
 import '../controller/controller.dart';
@@ -12,18 +11,22 @@ class Localization {
   late Locale _locale;
 
   final RegExp _replaceArgRegex = RegExp('{}');
-  final RegExp _linkKeyMatcher =
-      RegExp(r'(?:@(?:\.[a-z]+)?:(?:[\w\-_|.]+|\([\w\-_|.]+\)))');
+  final RegExp _linkKeyMatcher = RegExp(
+    r'(?:@(?:\.[a-z]+)?:(?:[\w\-_|.]+|\([\w\-_|.]+\)))',
+  );
   final RegExp _linkKeyPrefixMatcher = RegExp(r'^@(?:\.([a-z]+))?:');
   final RegExp _bracketsMatcher = RegExp('[()]');
   final _modifiers = <String, String Function(String?)>{
     'upper': (String? val) => val!.toUpperCase(),
     'lower': (String? val) => val!.toLowerCase(),
-    'capitalize': (String? val) => '${val![0].toUpperCase()}${val.substring(1)}'
+    'capitalize': (String? val) => val == null || val.isEmpty
+        ? ''
+        : '${val[0].toUpperCase()}${val.substring(1)}',
   };
 
   bool _useFallbackTranslationsForEmptyResources = false;
   bool _ignorePluralRules = false;
+  bool _localizePluralDigits = false;
 
   Localization();
 
@@ -40,7 +43,8 @@ class Localization {
     Translations? fallbackTranslations,
     Map<Locale, Translations>? preloadedTranslations,
     bool useFallbackTranslationsForEmptyResources = false,
-    bool ignorePluralRules = true,
+    bool ignorePluralRules = false,
+    bool localizePluralDigits = false,
   }) {
     instance._locale = locale;
     instance._translations = translations;
@@ -49,6 +53,7 @@ class Localization {
     instance._useFallbackTranslationsForEmptyResources =
         useFallbackTranslationsForEmptyResources;
     instance._ignorePluralRules = ignorePluralRules;
+    instance._localizePluralDigits = localizePluralDigits;
     return translations == null ? false : true;
   }
 
@@ -58,7 +63,13 @@ class Localization {
     Map<String, String>? namedArgs,
     String? gender,
     Locale? locale,
+    bool translate = true,
   }) {
+    // Not translating: the key is used as the text itself (still formatted).
+    if (!translate) {
+      return _replaceArgs(_replaceNamedArgs(key, namedArgs), args);
+    }
+
     late String res;
     bool logMissingKeys = true;
     try {
@@ -73,14 +84,14 @@ class Localization {
       res = _resolve(key, logging: logMissingKeys, locale: locale);
     }
 
-    res = _replaceLinks(res, logging: logMissingKeys);
+    res = _replaceLinks(res, logging: logMissingKeys, locale: locale);
 
     res = _replaceNamedArgs(res, namedArgs);
 
     return _replaceArgs(res, args);
   }
 
-  String _replaceLinks(String res, {bool logging = true}) {
+  String _replaceLinks(String res, {bool logging = true, Locale? locale}) {
     // TODO: add recursion detection and a resolve stack.
     final matches = _linkKeyMatcher.allMatches(res);
     var result = res;
@@ -92,10 +103,11 @@ class Localization {
       final formatterName = linkPrefixMatches.first[1];
 
       // Remove the leading @:, @.case: and the brackets
-      final linkPlaceholder =
-          link.replaceAll(linkPrefix, '').replaceAll(_bracketsMatcher, '');
+      final linkPlaceholder = link
+          .replaceAll(linkPrefix, '')
+          .replaceAll(_bracketsMatcher, '');
 
-      var translated = _resolve(linkPlaceholder);
+      var translated = _resolve(linkPlaceholder, locale: locale);
 
       if (formatterName != null) {
         if (_modifiers.containsKey(formatterName)) {
@@ -103,13 +115,15 @@ class Localization {
         } else {
           if (logging) {
             PlayxLocaleController.logger?.warning(
-                'Undefined modifier $formatterName, available modifiers: ${_modifiers.keys.toString()}');
+              'Undefined modifier $formatterName, available modifiers: ${_modifiers.keys.toString()}',
+            );
           }
         }
       }
 
-      result =
-          translated.isEmpty ? result : result.replaceAll(link, translated);
+      result = translated.isEmpty
+          ? result
+          : result.replaceAll(link, translated);
     }
 
     return result;
@@ -125,17 +139,10 @@ class Localization {
 
   String _replaceNamedArgs(String res, Map<String, String>? args) {
     if (args == null || args.isEmpty) return res;
-    args.forEach((String key, String value) =>
-        res = res.replaceAll(RegExp('{$key}'), value));
+    args.forEach(
+      (String key, String value) => res = res.replaceAll('{$key}', value),
+    );
     return res;
-  }
-
-  static PluralRule? _pluralRule(String? locale, num howMany) {
-    if (instance._ignorePluralRules) {
-      return () => _pluralCaseFallback(howMany);
-    }
-    startRuleEvaluation(howMany);
-    return pluralRules[locale];
   }
 
   static PluralCase _pluralCaseFallback(num value) {
@@ -159,36 +166,27 @@ class Localization {
     String? name,
     NumberFormat? format,
     Locale? locale,
+    bool translate = true,
+    bool? localizeDigits,
   }) {
+    final formattedValue = _formatPluralValue(
+      value,
+      format: format,
+      localizeDigits: localizeDigits,
+      locale: locale,
+    );
+
     late String res;
-
-    final pLangCode = locale?.languageCode ?? _locale.languageCode;
-    final pluralRule = _pluralRule(pLangCode, value);
-    final pluralCase =
-        pluralRule != null ? pluralRule() : _pluralCaseFallback(value);
-
-    switch (pluralCase) {
-      case PluralCase.ZERO:
-        res = _resolvePlural(key, 'zero', locale: locale);
-        break;
-      case PluralCase.ONE:
-        res = _resolvePlural(key, 'one', locale: locale);
-        break;
-      case PluralCase.TWO:
-        res = _resolvePlural(key, 'two', locale: locale);
-        break;
-      case PluralCase.FEW:
-        res = _resolvePlural(key, 'few', locale: locale);
-        break;
-      case PluralCase.MANY:
-        res = _resolvePlural(key, 'many', locale: locale);
-        break;
-      case PluralCase.OTHER:
-        res = _resolvePlural(key, 'other', locale: locale);
-        break;
+    if (translate) {
+      final languageCode = locale?.languageCode ?? _locale.languageCode;
+      res = _resolvePluralForms(
+        key,
+        _pluralForms(languageCode, value),
+        locale: locale,
+      );
+    } else {
+      res = key;
     }
-
-    final formattedValue = format == null ? '$value' : format.format(value);
 
     if (name != null) {
       namedArgs = {...?namedArgs, name: formattedValue};
@@ -198,42 +196,95 @@ class Localization {
     return _replaceArgs(res, args ?? [formattedValue]);
   }
 
+  /// The count as text: with [format] if given, otherwise localized digits
+  /// (`٣` instead of `3` in Arabic) when [localizeDigits] (or the config
+  /// `localizePluralDigits`) is enabled.
+  String _formatPluralValue(
+    num value, {
+    NumberFormat? format,
+    bool? localizeDigits,
+    Locale? locale,
+  }) {
+    if (format != null) return format.format(value);
+    if (!(localizeDigits ?? _localizePluralDigits)) return '$value';
+    final target = locale ?? _locale;
+    // intl's plain `ar` uses Western digits; `ar_EG` uses Arabic-Indic digits.
+    final tag = target.languageCode == 'ar' ? 'ar_EG' : target.toLanguageTag();
+    try {
+      return NumberFormat.decimalPattern(tag).format(value);
+    } catch (_) {
+      // Unknown number symbols for this locale.
+      return '$value';
+    }
+  }
+
+  /// The plural forms to try, most specific first.
+  ///
+  /// With language rules (default): an exact `zero` / `one` / `two` form for
+  /// 0, 1 and 2, then the form the language's rule picks (`few`, `many`, ...).
+  /// With `ignorePluralRules`: only the exact `zero` / `one` / `two` form.
+  /// The caller falls back to `other` when none of them exists.
+  List<String> _pluralForms(String languageCode, num value) {
+    final exact = _pluralCaseFallback(value);
+    if (_ignorePluralRules) return [exact.name.toLowerCase()];
+
+    final rule = pluralRules[languageCode];
+    PluralCase language = PluralCase.OTHER;
+    if (rule != null) {
+      startRuleEvaluation(value, null);
+      language = rule();
+    }
+    return {exact.name.toLowerCase(), language.name.toLowerCase()}.toList();
+  }
+
+  String _resolvePluralForms(String key, List<String> forms, {Locale? locale}) {
+    for (final form in forms) {
+      if (form == 'other') continue;
+      final tag = '$key.$form';
+      final resource = _resolve(
+        tag,
+        logging: false,
+        fallback: _fallbackTranslations != null,
+        locale: locale,
+      );
+      if (resource != tag) return resource;
+    }
+    return _resolve('$key.other', locale: locale);
+  }
+
   String _gender(String key, {required String gender, Locale? locale}) {
     return _resolve('$key.$gender', locale: locale);
   }
 
-  String _resolvePlural(String key, String subKey, {Locale? locale}) {
-    if (subKey == 'other') return _resolve('$key.other', locale: locale);
-
-    final tag = '$key.$subKey';
-    var resource =
-        _resolve(tag, logging: false, fallback: _fallbackTranslations != null, locale: locale);
-    if (resource == tag) {
-      resource = _resolve('$key.other', locale: locale);
-    }
-    return resource;
-  }
-
-  String _resolve(String key, {bool logging = true, bool fallback = true, Locale? locale}) {
+  String _resolve(
+    String key, {
+    bool logging = true,
+    bool fallback = true,
+    Locale? locale,
+  }) {
     String? resource;
     bool isRequestedLanguageFallback = false;
 
     if (locale != null) {
-      final xLocale = PlayxLocaleController.controller.config.supportedLocales.firstWhereOrNull((e) => e.locale.supports(locale));
+      final xLocale = PlayxLocaleController.controller.config.supportedLocales
+          .firstWhereOrNull((e) => e.locale.supports(locale));
       if (xLocale != null) {
         if (xLocale.locale == _locale) {
           resource = _translations?.get(key);
         } else {
-          final fallbackLocale = PlayxLocaleController.controller.getFallbackLocale();
+          final fallbackLocale = PlayxLocaleController.controller
+              .getFallbackLocale();
           if (xLocale.locale == fallbackLocale.locale) {
             resource = _fallbackTranslations?.get(key);
             isRequestedLanguageFallback = true;
-          } else if (_preloadedTranslations != null && _preloadedTranslations!.containsKey(xLocale.locale)) {
+          } else if (_preloadedTranslations != null &&
+              _preloadedTranslations!.containsKey(xLocale.locale)) {
             resource = _preloadedTranslations![xLocale.locale]?.get(key);
           } else {
             if (logging) {
               PlayxLocaleController.logger?.warning(
-                  'Translations for $locale are not loaded. Set preloadSupportedLocales to true in PlayxLocaleConfig to support this, or only request current/fallback locales.');
+                'Translations for $locale are not loaded. Set preloadSupportedLocales to true in PlayxLocaleConfig to support this, or only request current/fallback locales.',
+              );
             }
             return key;
           }
@@ -241,7 +292,8 @@ class Localization {
       } else {
         if (logging) {
           PlayxLocaleController.logger?.warning(
-              'Translations for $locale are not supported in config.');
+            'Translations for $locale are not supported in config.',
+          );
         }
         return key;
       }
@@ -252,18 +304,22 @@ class Localization {
     if (resource == null ||
         (_useFallbackTranslationsForEmptyResources && resource.isEmpty)) {
       if (logging && !isRequestedLanguageFallback) {
-        PlayxLocaleController.logger
-            ?.warning('Localization key [$key] not found');
+        PlayxLocaleController.logger?.warning(
+          'Localization key [$key] not found',
+        );
       }
-      if (_fallbackTranslations == null || !fallback || isRequestedLanguageFallback) {
+      if (_fallbackTranslations == null ||
+          !fallback ||
+          isRequestedLanguageFallback) {
         return key;
       } else {
         resource = _fallbackTranslations?.get(key);
         if (resource == null ||
             (_useFallbackTranslationsForEmptyResources && resource.isEmpty)) {
           if (logging) {
-            PlayxLocaleController.logger
-                ?.warning('Fallback localization key [$key] not found');
+            PlayxLocaleController.logger?.warning(
+              'Fallback localization key [$key] not found',
+            );
           }
           return key;
         }

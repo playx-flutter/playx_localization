@@ -21,6 +21,12 @@ class XLocale extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [id, name, languageCode, countryCode, scriptCode, fontFamily];
+  List<Object?> get props => [
+    id,
+    name,
+    languageCode,
+    countryCode,
+    scriptCode,
+    fontFamily,
+  ];
 }

@@ -14,8 +14,10 @@ class PlayxLocalizationDelegate extends LocalizationsDelegate<Localization> {
   ///  * use only the lang code to generate i18n file path like en.json or ar.json
   // final bool useOnlyLangCode;
 
-  PlayxLocalizationDelegate(
-      {this.localizationController, this.supportedLocales});
+  PlayxLocalizationDelegate({
+    this.localizationController,
+    this.supportedLocales,
+  });
 
   @override
   bool isSupported(Locale locale) =>
@@ -25,9 +27,10 @@ class PlayxLocalizationDelegate extends LocalizationsDelegate<Localization> {
   Future<Localization> load(Locale locale) async {
     if (localizationController!.translations == null) {
       final xLocale = localizationController!.searchLocaleByLanguageCode(
-          languageCode: locale.languageCode,
-          countryCode: locale.countryCode,
-          scriptCode: locale.scriptCode);
+        languageCode: locale.languageCode,
+        countryCode: locale.countryCode,
+        scriptCode: locale.scriptCode,
+      );
       if (xLocale == null) {
         throw UnsupportedError('Locale not found');
       }
@@ -39,8 +42,10 @@ class PlayxLocalizationDelegate extends LocalizationsDelegate<Localization> {
       fallbackTranslations: localizationController!.fallbackTranslations,
       preloadedTranslations: localizationController!.preloadedTranslations,
       useFallbackTranslationsForEmptyResources: localizationController!
-          .config.useFallbackTranslationsForEmptyResources,
+          .config
+          .useFallbackTranslationsForEmptyResources,
       ignorePluralRules: localizationController!.config.ignorePluralRules,
+      localizePluralDigits: localizationController!.config.localizePluralDigits,
     );
 
     return Future.value(Localization.instance);

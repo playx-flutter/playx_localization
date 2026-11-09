@@ -39,12 +39,19 @@ String tr(
   Map<String, String>? namedArgs,
   String? gender,
   Locale? locale,
+  bool translate = true,
 }) {
-  return context != null
-      ? Localization.of(context)!
-          .tr(key, args: args, namedArgs: namedArgs, gender: gender, locale: locale)
-      : Localization.instance
-          .tr(key, args: args, namedArgs: namedArgs, gender: gender, locale: locale);
+  final localization =
+      (context != null ? Localization.of(context) : null) ??
+      Localization.instance;
+  return localization.tr(
+    key,
+    args: args,
+    namedArgs: namedArgs,
+    gender: gender,
+    locale: locale,
+    translate: translate,
+  );
 }
 
 bool trExists(String key, {BuildContext? context}) {
@@ -60,7 +67,7 @@ bool trExists(String key, {BuildContext? context}) {
 /// [BuildContext] The location in the tree where this widget builds
 /// [args] List of localized strings. Replaces {} left to right
 /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
-/// [name] Name of number value. Replaces {$name} to value
+/// [name] Name of number value. Replaces `{name}` with the number
 /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
 ///
 /// Example:
@@ -112,10 +119,21 @@ String plural(
   String? name,
   NumberFormat? format,
   Locale? locale,
+  bool translate = true,
+  bool? localizeDigits,
 }) {
   final Localization localization =
       (context != null ? Localization.of(context) : null) ??
-          Localization.instance;
-  return localization.plural(key, value,
-      args: args, namedArgs: namedArgs, name: name, format: format, locale: locale);
+      Localization.instance;
+  return localization.plural(
+    key,
+    value,
+    args: args,
+    namedArgs: namedArgs,
+    name: name,
+    format: format,
+    locale: locale,
+    translate: translate,
+    localizeDigits: localizeDigits,
+  );
 }

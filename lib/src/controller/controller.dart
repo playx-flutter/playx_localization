@@ -2,13 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl_standalone.dart';
 import 'package:playx_localization/playx_localization.dart';
-import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
 import 'package:playx_localization/src/easy_localization/translations.dart';
 
 import '../easy_localization/localization.dart';
+import 'locale_persistence.dart';
+import 'locale_resolver.dart';
 import 'translation_manager.dart';
-
-const _lastKnownIndexKey = 'playx.locale.last_known_index';
 
 /// PlayxLocalizationController :
 /// Used to update current app locale with id, index, device locale and more.
@@ -16,24 +15,29 @@ const _lastKnownIndexKey = 'playx.locale.last_known_index';
 class PlayxLocaleController extends ValueNotifier<XLocale?> {
   final PlayxLocaleConfig config;
 
-  PlayxLocaleController({
-    required this.config,
-  }) : super(null);
+  PlayxLocaleController({required this.config}) : super(null);
 
   /// The current PlayxLocaleController instance.
   static PlayxLocaleController? _localizationControllerInstance;
+
+  /// Whether [boot] has been called.
+  static bool get isBooted => _localizationControllerInstance != null;
 
   /// The current PlayxLocaleController instance getter .
   /// Throws exception if not initialized.
   static PlayxLocaleController get controller {
     if (_localizationControllerInstance == null) {
       throw Exception(
-          'PlayxLocalization has not been initialized. Please ensure you have called boot method before accessing any property.');
+        'PlayxLocalization has not been initialized. Please ensure you have called boot method before accessing any property.',
+      );
     }
     return _localizationControllerInstance!;
   }
 
   late PlayxLocalizationDelegate delegate;
+
+  /// Reads and writes the saved locale through `config.storage`.
+  late final LocalePersistence persistence = LocalePersistence(config.storage);
 
   Translations? _translations, _fallbackTranslations;
   Map<Locale, Translations>? _preloadedTranslations;
@@ -45,7 +49,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   Translations? get fallbackTranslations => _fallbackTranslations;
 
   /// all preloaded translations loaded from assets, if config.preloadSupportedLocales is true.
-  Map<Locale, Translations>? get preloadedTranslations => _preloadedTranslations;
+  Map<Locale, Translations>? get preloadedTranslations =>
+      _preloadedTranslations;
 
   // Returns the device locale.
   Locale? deviceLocale;
@@ -61,7 +66,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   int get currentIndex {
     if (value == null) {
       throw Exception(
-          'Localization has not been initialized. You must call boot method before accessing any property.');
+        'Localization has not been initialized. You must call boot method before accessing any property.',
+      );
     }
     return config.supportedLocales.indexOf(value!);
   }
@@ -69,29 +75,40 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   /// set up the base controller to load locales.
   Future<void> boot() async {
     final logger = PlayxLogger.initLogger(
-        name: 'Playx Localization',
-        setAsDefault: false,
-        useColoredFormatter: true);
+      name: 'Playx Localization',
+      setAsDefault: false,
+      useColoredFormatter: true,
+    );
     _localizationControllerInstance = this;
-    final lastKnownIndex = await getLastSavedIndexFromPrefs(
-        migratePrefsToAsync: config.migratePrefsToAsync);
+    final saved = await persistence.load(
+      migrateLegacyPrefs: config.migratePrefsToAsync,
+    );
 
     final foundPlatformLocale = await findSystemLocale();
     deviceLocale = foundPlatformLocale.toLocale();
     logger.i('Device Locale ${deviceLocale?.toStringWithSeparator()}');
 
-    _isDeviceLocaleSelected = lastKnownIndex == -1;
+    final resolved = LocaleResolver.resolveBoot(
+      config,
+      saved: saved,
+      deviceLocale: deviceLocale,
+    );
+    final locale = resolved.locale;
+    _isDeviceLocaleSelected = resolved.isDeviceSelected;
 
-    XLocale? lastSavedLocale;
-    if (lastKnownIndex != null && lastKnownIndex >= 0) {
-      lastSavedLocale = config.supportedLocales.atOrNull(lastKnownIndex);
+    if (resolved.fromLegacyIndex && config.saveLocale) {
+      // Migrate the index saved by older versions to the locale id.
+      await persistence.saveLocale(locale, supportedXLocales.indexOf(locale));
+      logger.i('Migrated saved locale index to id "${locale.id}"');
     }
 
-    final locale = _getStartLocale(savedLocale: lastSavedLocale);
-
     //Load translations from assets
-    await loadTranslations(locale);
-    logger.i('Loaded Translation from assets');
+    if (await loadTranslations(locale)) {
+      logger.i('Loaded Translation from assets');
+    } else {
+      // Keep Localization in a usable state; the delegate retries loading.
+      _syncLocalization(locale);
+    }
 
     delegate = PlayxLocalizationDelegate(
       localizationController: this,
@@ -100,85 +117,47 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     value = locale;
 
     logger.i(
-        'Translation booted with locale ${locale.name} -> ${locale.toStringWithSeparator()} at index ${supportedXLocales.indexOf(locale)}');
+      'Translation booted with locale ${locale.name} -> ${locale.toStringWithSeparator()} at index ${supportedXLocales.indexOf(locale)}',
+    );
   }
 
-  /// Retrieves the last saved theme index from preferences.
-  ///
-  /// If [migratePrefsToAsync] is true, preferences are migrated to asynchronous storage.
+  /// Retrieves the index saved by older versions of the package.
+  @Deprecated('The locale is saved by id now. Use [persistence] instead.')
   Future<int?> getLastSavedIndexFromPrefs({
     bool migratePrefsToAsync = false,
   }) async {
-    await PlayxAsyncPrefs.create();
-    int? lastSavedIndex = await PlayxAsyncPrefs.maybeGetInt(
-      _lastKnownIndexKey,
-    );
-    if (migratePrefsToAsync && lastSavedIndex == null) {
-      await PlayxPrefs.create();
-      final lastKnownIndexInPrefs = PlayxPrefs.maybeGetInt(
-        _lastKnownIndexKey,
-      );
-      logger?.i(
-          'Migrating preferences to SharedPreferenceAsync found index $lastKnownIndexInPrefs');
-
-      if (lastKnownIndexInPrefs != null) {
-        await PlayxAsyncPrefs.setInt(_lastKnownIndexKey, lastKnownIndexInPrefs);
-        lastSavedIndex = lastKnownIndexInPrefs;
-      }
-    }
-    return lastSavedIndex;
-  }
-
-  ///Gets current locale to start the app with
-  ///First return any saved locale
-  ///If there isn't any save locale uses start locale from the config
-  ///If there is no save locale, Then it uses device locale if it's supported in the config supported locales.
-  ///If It's not supported then uses the first locale inf the config supported locales.
-  XLocale _getStartLocale({XLocale? savedLocale}) {
-    if (savedLocale != null) return savedLocale;
-
-    if (!_isDeviceLocaleSelected && config.startLocale != null) return config.startLocale!;
-
-    if (deviceLocale != null) {
-      final searchedLocale = supportedXLocales.firstWhereOrNull(
-          (e) => e.locale.supports(deviceLocale!));
-      if (searchedLocale != null) {
-        return searchedLocale;
-      }
-
-      final searchedLocaleByOnlyLanguageCode =
-          supportedXLocales.firstWhereOrNull(
-              (e) => e.languageCode == deviceLocale!.languageCode);
-      if (searchedLocaleByOnlyLanguageCode != null) {
-        return searchedLocaleByOnlyLanguageCode;
-      }
-    }
-    return getFallbackLocale();
+    return (await persistence.load(
+      migrateLegacyPrefs: migratePrefsToAsync,
+    )).index;
   }
 
   /// Get fallback Locale
   /// if fallbackLocale is not null then return it
   /// if fallbackLocale is null then return english locale if it's supported in the config supported locales.
   /// if english locale is not supported then return the first locale in the config supported locales.
-  XLocale getFallbackLocale() {
-    if (config.fallbackLocale != null) return config.fallbackLocale!;
-    if (config.supportedLocales.any((e) => e.languageCode == 'en')) {
-      return config.supportedLocales.firstWhere((e) => e.languageCode == 'en');
-    }
-    return config.supportedLocales.first;
-  }
+  XLocale getFallbackLocale() => LocaleResolver.fallbackLocale(config);
 
-  /// Load translations from assets
-  Future<void> loadTranslations(XLocale locale) async {
+  /// Load translations from assets.
+  ///
+  /// Returns `false` if loading failed. In that case the previously loaded
+  /// translations are kept.
+  Future<bool> loadTranslations(XLocale locale) async {
     final res = await TranslationManager.loadTranslations(
       locale: locale,
       config: config,
+      useFallbackTranslations: config.useFallbackTranslations,
       fallbackLocale: getFallbackLocale(),
     );
+    if (res.translations == null) return false;
     _translations = res.translations;
     _fallbackTranslations = res.fallbackTranslations;
     _preloadedTranslations = res.preloadedTranslations;
+    await _loadRequestedPreloads();
+    _syncLocalization(locale);
+    return true;
+  }
 
+  void _syncLocalization(XLocale locale) {
     Localization.load(
       locale.locale,
       translations: _translations,
@@ -187,7 +166,65 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
       useFallbackTranslationsForEmptyResources:
           config.useFallbackTranslationsForEmptyResources,
       ignorePluralRules: config.ignorePluralRules,
+      localizePluralDigits: config.localizePluralDigits,
     );
+  }
+
+  /// Locales requested through [preloadLocales]. They are kept loaded across
+  /// locale changes and reloads.
+  final Set<XLocale> _requestedPreloads = {};
+
+  Future<void> _loadRequestedPreloads() async {
+    for (final xLocale in _requestedPreloads) {
+      if (_preloadedTranslations?.containsKey(xLocale.locale) ?? false) {
+        continue;
+      }
+      try {
+        final data = await TranslationManager.loadTranslationData(
+          locale: xLocale,
+          config: config,
+        );
+        (_preloadedTranslations ??= {})[xLocale.locale] = Translations(
+          Map.from(data),
+        );
+      } catch (e, s) {
+        logger?.error(
+          'Error preloading ${xLocale.locale}: ',
+          error: e,
+          stackTrace: s,
+        );
+      }
+    }
+  }
+
+  /// Loads translations for [locales] so they can be used synchronously with
+  /// `tr(locale: ...)`, without enabling `config.preloadSupportedLocales` for
+  /// every locale. Locales that are not supported by the config are ignored.
+  Future<void> preloadLocales(Iterable<Locale> locales) async {
+    for (final locale in locales) {
+      final xLocale = supportedXLocales.firstWhereOrNull(
+        (e) => e.locale.supports(locale),
+      );
+      if (xLocale == null) {
+        logger?.warning(
+          'Cannot preload $locale: not in the supported locales.',
+        );
+        continue;
+      }
+      _requestedPreloads.add(xLocale);
+    }
+    final current = value;
+    if (current == null) return;
+    await _loadRequestedPreloads();
+    _syncLocalization(current);
+  }
+
+  /// Reloads the translations of the current locale and notifies listeners.
+  /// Used after translation sources are registered or removed.
+  Future<void> reloadTranslations() async {
+    final current = value;
+    if (current == null) return;
+    if (await loadTranslations(current)) notifyListeners();
   }
 
   /// update the locale to be one of the supported locales.
@@ -201,10 +238,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
       }
       return false;
     }
-    return _updateLocale(
-      locale: locale,
-      forceAppUpdate: forceAppUpdate,
-    );
+    return _updateLocale(locale: locale, forceAppUpdate: forceAppUpdate);
   }
 
   /// switch the locale to the next in the supported locales list
@@ -214,10 +248,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     final isLastLocale = currentIndex == config.supportedLocales.length - 1;
     final index = isLastLocale ? 0 : currentIndex + 1;
 
-    await updateByIndex(
-      index,
-      forceAppUpdate: forceAppUpdate,
-    );
+    await updateByIndex(index, forceAppUpdate: forceAppUpdate);
   }
 
   /// update the locale by index
@@ -227,8 +258,9 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     final locale = config.supportedLocales.atOrNull(index);
     if (locale == null) {
       if (config.logLocaleChanges) {
-        logger
-            ?.error('Locale with index $index not found in supported Locales');
+        logger?.error(
+          'Locale with index $index not found in supported Locales',
+        );
       }
       return false;
     }
@@ -238,8 +270,9 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   /// update the locale to by id
   /// if the id is not found it will return false.
   Future<bool> updateById(String id, {bool forceAppUpdate = false}) async {
-    final locale =
-        config.supportedLocales.firstWhereOrNull((element) => element.id == id);
+    final locale = config.supportedLocales.firstWhereOrNull(
+      (element) => element.id == id,
+    );
     if (locale == null) {
       if (config.logLocaleChanges) {
         logger?.error('Locale with id $id not found in supported Locales');
@@ -250,41 +283,35 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   }
 
   /// Search for locale by language code and country code if available.
-  XLocale? searchLocaleByLanguageCode(
-      {required String languageCode, String? countryCode, String? scriptCode}) {
-    final searchLocale = Locale.fromSubtags(
-        languageCode: languageCode,
-        countryCode: countryCode,
-        scriptCode: scriptCode);
-    final searchedLocale = supportedXLocales.firstWhereOrNull(
-        (e) => e.locale.supports(searchLocale));
-    if (searchedLocale != null) {
-      return searchedLocale;
-    }
-    //if not found then search by language code only.
-    final searchedLocaleByOnlyLanguageCode = supportedXLocales
-        .firstWhereOrNull((e) => e.languageCode == languageCode);
-    if (searchedLocaleByOnlyLanguageCode != null) {
-      return searchedLocaleByOnlyLanguageCode;
-    }
-    return null;
+  XLocale? searchLocaleByLanguageCode({
+    required String languageCode,
+    String? countryCode,
+    String? scriptCode,
+  }) {
+    return LocaleResolver.search(
+      config,
+      languageCode: languageCode,
+      countryCode: countryCode,
+      scriptCode: scriptCode,
+    );
   }
 
   /// update the locale to by language code and country code if available.
   /// if the locale is not supported it will return false.
   /// if [forceAppUpdate] is true it will force the app to update.
-  Future<bool> updateByLanguageCode(
-      {required String languageCode,
-      String? countryCode,
-      String? scriptCode,
-      bool forceAppUpdate = false}) async {
+  Future<bool> updateByLanguageCode({
+    required String languageCode,
+    String? countryCode,
+    String? scriptCode,
+    bool forceAppUpdate = false,
+  }) async {
     final locale = searchLocaleByLanguageCode(
-        languageCode: languageCode, countryCode: countryCode, scriptCode: scriptCode);
+      languageCode: languageCode,
+      countryCode: countryCode,
+      scriptCode: scriptCode,
+    );
     if (locale != null) {
-      return updateTo(
-        locale,
-        forceAppUpdate: forceAppUpdate,
-      );
+      return updateTo(locale, forceAppUpdate: forceAppUpdate);
     }
     return false;
   }
@@ -297,26 +324,41 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     final locale = foundPlatformLocale.toLocale();
     deviceLocale = locale;
     final search = searchLocaleByLanguageCode(
-        languageCode: locale.languageCode,
-        countryCode: locale.countryCode,
-        scriptCode: locale.scriptCode);
+      languageCode: locale.languageCode,
+      countryCode: locale.countryCode,
+      scriptCode: locale.scriptCode,
+    );
     if (search != null) {
       return _updateLocale(
-          locale: search, 
-          forceAppUpdate: forceAppUpdate, 
-          saveAsDeviceLocale: true);
+        locale: search,
+        forceAppUpdate: forceAppUpdate,
+        saveAsDeviceLocale: true,
+      );
     }
     return false;
   }
 
-  /// Reset locale to platform locale or fallback locale.
+  /// Forgets the saved locale and switches to the locale the app would start
+  /// with on a fresh install: `startLocale`, else the device locale, else the
+  /// fallback locale. The result is not saved, so the app keeps starting this
+  /// way until a locale is selected again.
   Future<void> resetLocale({bool forceAppUpdate = false}) async {
     final foundPlatformLocale = await findSystemLocale();
     deviceLocale = foundPlatformLocale.toLocale();
-    final locale = _getStartLocale(savedLocale: null);
+    final locale = LocaleResolver.defaultLocale(
+      config,
+      deviceLocale: deviceLocale,
+    );
 
-    logger?.i('Reset locale to ${locale.name} while the platform locale is $deviceLocale');
-    await updateTo(locale, forceAppUpdate: forceAppUpdate);
+    logger?.i(
+      'Reset locale to ${locale.name} while the platform locale is $deviceLocale',
+    );
+    await deleteSavedLocale();
+    await _updateLocale(
+      locale: locale,
+      forceAppUpdate: forceAppUpdate,
+      persist: false,
+    );
   }
 
   /// Update the locale to be one of the supported locales.
@@ -325,6 +367,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
     required XLocale locale,
     bool forceAppUpdate = false,
     bool saveAsDeviceLocale = false,
+    bool persist = true,
   }) async {
     try {
       final index = supportedXLocales.indexOf(locale);
@@ -335,15 +378,23 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
         return false;
       }
 
-      await loadTranslations(
-        locale,
-      );
-      if (config.saveLocale) {
-        final savedIndex = saveAsDeviceLocale ? -1 : index;
-        await PlayxAsyncPrefs.setInt(_lastKnownIndexKey, savedIndex);
+      if (!await loadTranslations(locale)) {
+        if (config.logLocaleChanges) {
+          logger?.error(
+            'Could not load translations for ${locale.name}; keeping the current locale.',
+          );
+        }
+        return false;
+      }
+      if (config.saveLocale && persist) {
+        if (saveAsDeviceLocale) {
+          await persistence.saveDeviceLocale();
+        } else {
+          await persistence.saveLocale(locale, index);
+        }
       }
       _isDeviceLocaleSelected = saveAsDeviceLocale;
-      
+
       final oldLocale = value;
       value = locale;
 
@@ -353,7 +404,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
 
       if (config.logLocaleChanges) {
         logger?.i(
-            'Updated locale to ${locale.name} with code ${locale.locale.toStringWithSeparator()} at index $index from ${oldLocale?.locale.toStringWithSeparator()}');
+          'Updated locale to ${locale.name} with code ${locale.locale.toStringWithSeparator()} at index $index from ${oldLocale?.locale.toStringWithSeparator()}',
+        );
       }
       return true;
     } catch (e) {
@@ -382,7 +434,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   bool isCurrentLocaleArabic() {
     if (value == null) {
       throw Exception(
-          'Localization has not been initialized. You must call boot method before accessing any property.');
+        'Localization has not been initialized. You must call boot method before accessing any property.',
+      );
     }
     return value!.languageCode == 'ar';
   }
@@ -391,7 +444,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   bool isCurrentLocaleEnglish() {
     if (value == null) {
       throw Exception(
-          'Localization has not been initialized. You must call boot method before accessing any property.');
+        'Localization has not been initialized. You must call boot method before accessing any property.',
+      );
     }
     return value!.languageCode == 'en';
   }
@@ -400,7 +454,8 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   bool isCurrentLocaleRtl() {
     if (value == null) {
       throw Exception(
-          'Localization has not been initialized. You must call boot method before accessing any property.');
+        'Localization has not been initialized. You must call boot method before accessing any property.',
+      );
     }
     return value!.locale.isRTL;
   }
@@ -409,14 +464,15 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   String currentLocaleToString({String separator = '_'}) {
     if (value == null) {
       throw Exception(
-          'Localization has not been initialized. You must call boot method before accessing any property.');
+        'Localization has not been initialized. You must call boot method before accessing any property.',
+      );
     }
     return value!.locale.toStringWithSeparator(separator: separator);
   }
 
   ///Reset saved locales.
   Future<void> deleteSavedLocale() async {
-    return PlayxAsyncPrefs.remove(_lastKnownIndexKey);
+    return persistence.clear();
   }
 
   //delegates to be used in material app.
