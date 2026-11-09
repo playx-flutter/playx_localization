@@ -1,0 +1,96 @@
+name: Build
+
+on:
+  push:
+    branches: [main, qa]
+  pull_request:
+    branches: [main, qa]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Flutter ${{ matrix.flutter }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # `3.44.0` is the minimum version supported by the package
+        # (see `environment` in pubspec.yaml), `stable` is the latest one.
+        flutter: ['3.44.0', 'stable']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ matrix.flutter == 'stable' && '' || matrix.flutter }}
+          cache: true
+
+      - name: Install deps
+        run: flutter pub get
+
+      # Formatting output depends on the SDK version, so check it only once.
+      - name: Format
+        if: matrix.flutter == 'stable'
+        run: dart format --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test --coverage
+
+      - name: Check Test Coverage
+        if: matrix.flutter == 'stable'
+        uses: VeryGoodOpenSource/very_good_coverage@v3
+        with:
+          min_coverage: 90
+
+      - name: Upload coverage reports to Codecov
+        if: matrix.flutter == 'stable' && github.event_name == 'push'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: playx-flutter/playx_localization
+
+  # Runs the command line tools the way users do, against the example app.
+  tools:
+    name: Command line tools
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install deps
+        run: flutter pub get
+        working-directory: example
+
+      - name: Generated keys are up to date
+        run: dart run playx_localization:generate --check --output lib/translation/app_trans.dart
+        working-directory: example
+
+      - name: Validate translations
+        run: dart run playx_localization:validate --strict
+        working-directory: example
+
+  publish-dry-run:
+    name: Publish dry run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter pub publish --dry-run
