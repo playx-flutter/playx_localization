@@ -7,6 +7,7 @@
 - Updated `playx_core` dependency to `^2.0.0` and upgraded all dependencies to their latest versions.
 - **Translations from other packages**: Added `PlayxLocalization.registerTranslations` / `unregisterTranslations` and `PlayxTranslationSource` (with a `.package` constructor) so packages can ship their own translations. Supports optional key `namespace`, works before or after boot, tolerates missing locales, and is always overridden by the app's own keys.
 - **Key generator**: New `dart run playx_localization:generate` command generates a class of typed key constants from a base translation file (nested keys, linked files, plural groups, `--check` for CI).
+- **Validator**: New `dart run playx_localization:validate` command reports missing/extra keys, placeholder mismatches, plural groups without `other`, empty values, unused keys (`--src`), invalid JSON and broken linked files. Exits non-zero on errors (or warnings with `--strict`).
 - **Fix**: Linking the same translation file from multiple keys is no longer reported as a cyclic link. Only real cycles throw now.
 - Added a unit test suite covering plural rules, translations, linked file resolution, translation merging, device-sync persistence, `scriptCode` locale matching, and the string, number and locale extensions.
 - Fixed analyzer lints.

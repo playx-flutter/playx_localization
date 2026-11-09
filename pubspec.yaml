@@ -12,6 +12,7 @@ topics:
 
 executables:
   generate: generate
+  validate: validate
 
 environment:
   sdk: ">=3.12.0 <4.0.0"

@@ -95,6 +95,18 @@ AppTrans.items.plural(3);         // plural group { one, other } is a single key
 - Nested keys become `homeTitle`; linked files (`":/auth.json"`) are resolved; each constant gets the English text as a doc comment.
 - Use `--check` in CI to fail when the generated file is out of date.
 
+### Validating Translations
+Check that every locale has the same keys and placeholders as your base locale:
+
+```bash
+dart run playx_localization:validate                 # base locale: en
+dart run playx_localization:validate --base ar --src lib --strict
+```
+
+- **Errors** (exit code 1): missing keys, `{name}` / `{}` placeholders that differ from the base locale, plural groups without `other`, invalid JSON or broken `:/linked.json` files.
+- **Warnings:** extra keys, empty values, and with `--src <dir>` keys never used in your Dart code (as a string literal or a generated constant). `--strict` turns warnings into errors.
+- Add it to CI next to `dart run playx_localization:generate --check`.
+
 ### Note on iOS
 To enable translation on iOS devices, add supported locales to `ios/Runner/Info.plist` as described [here](https://flutter.dev/docs/development/accessibility-and-localization/internationalization#specifying-supportedlocales).
 
