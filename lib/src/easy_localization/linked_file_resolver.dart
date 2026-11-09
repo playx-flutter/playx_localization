@@ -73,13 +73,13 @@ class JsonLinkedFileResolver extends LinkedFileResolver {
           final Map<String, dynamic> linkedJson =
               json.decode(linkedContent) as Map<String, dynamic>;
 
-          visited.add(linkedAssetPath);
-
+          // Track only the ancestor chain so the same file can be linked
+          // from several keys without being reported as a cycle.
           final resolved = await resolveLinkedFiles(
             basePath: basePath,
             languageCode: languageCode,
             baseJson: linkedJson,
-            visited: visited,
+            visited: {...visited, linkedAssetPath},
             depth: depth + 1,
             countryCode: countryCode,
           );
