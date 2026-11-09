@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl_standalone.dart';
 import 'package:playx_localization/playx_localization.dart';
-import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
 import 'package:playx_localization/src/easy_localization/translations.dart';
 
 import '../easy_localization/localization.dart';

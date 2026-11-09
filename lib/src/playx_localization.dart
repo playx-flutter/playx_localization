@@ -133,6 +133,12 @@ abstract class PlayxLocalization {
   static Future<bool> updateToDeviceLocale({bool forceAppUpdate = false}) =>
       _controller.updateToDeviceLocale(forceAppUpdate: forceAppUpdate);
 
+  /// Forgets the saved locale and switches to the locale the app would start
+  /// with on a fresh install: `startLocale`, else the device locale, else the
+  /// fallback locale. The result is not saved.
+  static Future<void> resetLocale({bool forceAppUpdate = false}) =>
+      _controller.resetLocale(forceAppUpdate: forceAppUpdate);
+
   ///Check if current locale is arabic.
   static bool isCurrentLocaleArabic() => _controller.isCurrentLocaleArabic();
 

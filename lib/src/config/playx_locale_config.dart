@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:playx_localization/src/delegate/playx_localization_delegate.dart';
 
 import '../../playx_localization.dart';
 import '../easy_localization/file_loaders/root_bundle_file_loader.dart';
