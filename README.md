@@ -75,6 +75,26 @@ await PlayxLocalization.registerTranslations(
 - A package doesn't need every locale. Missing locales are skipped, and `en-US` falls back to `en`.
 - Use `PlayxLocalization.unregisterTranslations(id)` to remove a source.
 
+### Generating Translation Keys
+Generate a class with a constant for every key in your base translation file (for example `en.json`), so you get autocomplete and no typos:
+
+```bash
+dart run playx_localization:generate \
+  --source assets/translations/en.json \
+  --output lib/generated/app_trans.dart \
+  --class AppTrans
+```
+
+```dart
+AppTrans.appName.tr();            // 'app_name'
+AppTrans.homeTitle.tr();          // nested key 'home.title'
+AppTrans.items.plural(3);         // plural group { one, other } is a single key
+```
+
+- All options are optional. The defaults are the paths above, so `dart run playx_localization:generate` is usually enough.
+- Nested keys become `homeTitle`; linked files (`":/auth.json"`) are resolved; each constant gets the English text as a doc comment.
+- Use `--check` in CI to fail when the generated file is out of date.
+
 ### Note on iOS
 To enable translation on iOS devices, add supported locales to `ios/Runner/Info.plist` as described [here](https://flutter.dev/docs/development/accessibility-and-localization/internationalization#specifying-supportedlocales).
 
