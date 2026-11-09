@@ -17,6 +17,8 @@
 - **Fix**: Decimal counts were rounded before choosing the plural form (`1.4` was treated as singular).
 - **Validator**: warns when a plural group misses forms its language uses (for example Arabic `few` / `many`). `pluralCategoriesFor` is used for this.
 - **Custom asset loaders are easier**: `AssetLoader`'s `fileLoader` and `linkedFileResolver` are now optional, so a custom loader (CSV, YAML, HTTP, ...) only has to implement `load`. `FileLoader`, `RootBundleFileLoader` and `LinkedFileResolver` are exported.
+- **Documentation site**: Guides and the API reference are published to GitHub Pages at https://playx-flutter.github.io/playx_localization/. The README is now a short overview that links to them.
+- **CI**: New build workflow (tests on the minimum and latest Flutter, format, analyze, 90% coverage gate, command line tools check, publish dry run) and a docs workflow.
 - **`translate` option**: `tr` and `plural` (String, `Text` and `BuildContext` variants) accept `translate: false` to return the text as-is, still applying `args` / `namedArgs`.
 - **`preloadLocales`**: New `PlayxLocalization.preloadLocales` loads only the locales you need so `tr(locale: ...)` works for them without enabling `preloadSupportedLocales` for all locales.
 - `tr` with a `BuildContext` now falls back to the global instance when no `Localization` is found in the context, instead of throwing.
