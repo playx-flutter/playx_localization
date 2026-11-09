@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:playx_localization/playx_localization.dart';
 import 'package:playx_localization/src/controller/controller.dart';
+import 'package:playx_localization/src/easy_localization/translation_source.dart';
 import 'package:playx_localization/src/easy_localization/translations.dart';
 
 class TranslationManager {
@@ -101,6 +102,13 @@ class TranslationManager {
         ? Locale.fromSubtags(
             languageCode: locale.languageCode, scriptCode: locale.scriptCode)
         : locale.locale;
+
+    // Translations contributed by other packages come first, so anything
+    // defined by the app overrides them.
+    for (final source in TranslationSourceRegistry.sources) {
+      final map = await source.load(desiredLocale);
+      if (map != null) result.addAllRecursive(map);
+    }
 
     List<AssetLoader> loaders = [
       config.assetLoader,

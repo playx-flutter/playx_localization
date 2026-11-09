@@ -56,6 +56,25 @@ flutter:
 ### Loading Translations from Other Resources
 **Playx Localization** supports loading translations from various sources such as JSON, CSV, HTTP, XML, YAML files, etc. For more information, refer to [Easy Localization Loader](https://github.com/aissat/easy_localization_loader).
 
+### Translations from Other Packages
+A package can ship its own translations and register them with Playx Localization. The app doesn't need to know about its keys.
+
+In the other package, declare the folder in its `pubspec.yaml` (`assets/translations/en.json`, `ar.json`, ...) and register it:
+
+```dart
+await PlayxLocalization.registerTranslations(
+  PlayxTranslationSource.package(
+    package: 'my_package',      // resolves to packages/my_package/assets/translations
+    namespace: 'my_package',    // optional: keys become my_package.title
+  ),
+);
+```
+
+- Works before or after `PlayxLocalization.boot`. After boot, the current locale is reloaded right away.
+- Keys defined by the app always override keys from packages. Between packages, the one registered last wins. Use `namespace` to avoid collisions.
+- A package doesn't need every locale. Missing locales are skipped, and `en-US` falls back to `en`.
+- Use `PlayxLocalization.unregisterTranslations(id)` to remove a source.
+
 ### Note on iOS
 To enable translation on iOS devices, add supported locales to `ios/Runner/Info.plist` as described [here](https://flutter.dev/docs/development/accessibility-and-localization/internationalization#specifying-supportedlocales).
 

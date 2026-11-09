@@ -4,6 +4,7 @@ import 'package:playx_localization/src/extensions/locale_extensions.dart';
 import 'package:playx_localization/src/model/x_locale.dart';
 
 import 'config/playx_locale_config.dart';
+import 'easy_localization/translation_source.dart';
 
 /// PlayxLocalization :
 /// Used to update current app locale with id, index, device locale and more.
@@ -25,6 +26,31 @@ abstract class PlayxLocalization {
     WidgetsFlutterBinding.ensureInitialized();
     final controller = PlayxLocaleController(config: config);
     return controller.boot();
+  }
+
+  /// Registers translations contributed by another package (or any other
+  /// source) so they are merged into the app's translations.
+  ///
+  /// Can be called before or after [boot]. When called after, the current
+  /// locale is reloaded right away. Keys defined by the app always override
+  /// keys from registered sources. See [PlayxTranslationSource].
+  ///
+  /// Registering a source with an existing id replaces the previous one.
+  static Future<void> registerTranslations(PlayxTranslationSource source) async {
+    TranslationSourceRegistry.register(source);
+    if (PlayxLocaleController.isBooted) {
+      await _controller.reloadTranslations();
+    }
+  }
+
+  /// Removes a source registered with [registerTranslations].
+  /// Returns `false` if no source with [id] was registered.
+  static Future<bool> unregisterTranslations(String id) async {
+    final removed = TranslationSourceRegistry.unregister(id);
+    if (removed && PlayxLocaleController.isBooted) {
+      await _controller.reloadTranslations();
+    }
+    return removed;
   }
 
   ///returns the current supported xLocales.

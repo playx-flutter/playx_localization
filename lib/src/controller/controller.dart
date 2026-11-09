@@ -23,6 +23,9 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
   /// The current PlayxLocaleController instance.
   static PlayxLocaleController? _localizationControllerInstance;
 
+  /// Whether [boot] has been called.
+  static bool get isBooted => _localizationControllerInstance != null;
+
   /// The current PlayxLocaleController instance getter .
   /// Throws exception if not initialized.
   static PlayxLocaleController get controller {
@@ -188,6 +191,15 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
           config.useFallbackTranslationsForEmptyResources,
       ignorePluralRules: config.ignorePluralRules,
     );
+  }
+
+  /// Reloads the translations of the current locale and notifies listeners.
+  /// Used after translation sources are registered or removed.
+  Future<void> reloadTranslations() async {
+    final current = value;
+    if (current == null) return;
+    await loadTranslations(current);
+    notifyListeners();
   }
 
   /// update the locale to be one of the supported locales.
