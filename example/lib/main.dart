@@ -44,7 +44,7 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(
+    debugPrint(
         'Current Locale: ${PlayxLocalization.currentLocale} context :${context.locale.toStringWithSeparator()}');
     return Scaffold(
         appBar: AppBar(

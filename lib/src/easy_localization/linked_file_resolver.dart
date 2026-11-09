@@ -32,8 +32,7 @@ abstract class LinkedFileResolver {
 }
 
 class JsonLinkedFileResolver extends LinkedFileResolver {
-  const JsonLinkedFileResolver({required FileLoader fileLoader})
-      : super(fileLoader: fileLoader);
+  const JsonLinkedFileResolver({required super.fileLoader});
 
   @override
   Future<Map<String, dynamic>> resolveLinkedFiles({

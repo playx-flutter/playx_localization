@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:intl/intl.dart';
 import 'package:playx_localization/playx_localization.dart';
 
 import '../controller/controller.dart';
