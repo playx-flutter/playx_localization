@@ -48,7 +48,7 @@ extension PlayxLocalizationStringExtensions on String {
   /// [value] Number value for pluralization
   /// [args] List of localized strings. Replaces {} left to right
   /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
-  /// [name] Name of number value. Replaces {$name} to value
+  /// [name] Name of number value. Replaces `{name}` with the number
   /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
   /// [locale] and [translate]: see [tr].
   /// [localizeDigits] Shows the count in the digits of the locale (`٣` instead
@@ -222,10 +222,10 @@ extension BuildContextLocalizationExtension on BuildContext {
   /// Throws exception if [Localization] was not found.
   ///
   /// [key] Localization key
-  /// [value] Number value for pluralization
+  /// `number` Number value for pluralization
   /// [args] List of localized strings. Replaces {} left to right
   /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
-  /// [name] Name of number value. Replaces {$name} to value
+  /// [name] Name of number value. Replaces `{name}` with the number
   /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
   String plural(
     String key,

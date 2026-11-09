@@ -91,7 +91,7 @@ abstract class PlayxLocalization {
   static bool get isDeviceLocaleSelected => _controller.isDeviceLocaleSelected;
 
   /// Returns the current fallback Locale that is used in the app.
-  /// If [useFallbackTranslations] in config is false, it will return null.
+  /// If `useFallbackTranslations` in config is false, it will return null.
   /// Else it will return the fallback locale based on config.
   /// If no fallback locale is found, it will use english locale if found.
   /// If no english locale is found, it will return the first locale in the supported locales list.

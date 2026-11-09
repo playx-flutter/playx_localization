@@ -67,7 +67,7 @@ bool trExists(String key, {BuildContext? context}) {
 /// [BuildContext] The location in the tree where this widget builds
 /// [args] List of localized strings. Replaces {} left to right
 /// [namedArgs] Map of localized strings. Replaces the name keys {key_name} according to its name
-/// [name] Name of number value. Replaces {$name} to value
+/// [name] Name of number value. Replaces `{name}` with the number
 /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
 ///
 /// Example:

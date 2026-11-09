@@ -1,0 +1,19 @@
+title: Playx Localization
+description: Manage app locales, translations and plurals in Flutter, without BuildContext.
+remote_theme: just-the-docs/just-the-docs@v0.10.0
+plugins:
+  - jekyll-remote-theme
+url: https://playx-flutter.github.io
+baseurl: /playx_localization
+search_enabled: true
+heading_anchors: true
+color_scheme: light
+aux_links:
+  "API reference":
+    - "https://playx-flutter.github.io/playx_localization/api/"
+  "pub.dev":
+    - "https://pub.dev/packages/playx_localization"
+  "GitHub":
+    - "https://github.com/playx-flutter/playx_localization"
+exclude:
+  - api
