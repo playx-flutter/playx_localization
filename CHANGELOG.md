@@ -1,7 +1,7 @@
 # Changelog
 
-## 0.5.0
-> **Note**: Raises the minimum supported SDK versions.
+## 1.0.0
+> **Note**: First stable release. Raises the minimum supported SDK versions (Dart 3.12, Flutter 3.44). Existing saved locales, translation files named in the old script-code order, and linked-file folders are migrated automatically; see the entries below.
 
 - **Breaking**: Requires Dart `>=3.12.0` and Flutter `>=3.44.0`.
 - Updated `playx_core` dependency to `^2.0.0` and upgraded all dependencies to their latest versions.
