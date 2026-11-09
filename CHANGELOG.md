@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+> **Note**: Raises the minimum supported SDK versions.
+
+- **Breaking**: Requires Dart `>=3.12.0` and Flutter `>=3.44.0`.
+- Updated `playx_core` dependency to `^2.0.0` and upgraded all dependencies to their latest versions.
+- **Fix**: Linking the same translation file from multiple keys is no longer reported as a cyclic link. Only real cycles throw now.
+- Added a unit test suite covering plural rules, translations, linked file resolution, translation merging, device-sync persistence, `scriptCode` locale matching, and the string, number and locale extensions.
+- Fixed analyzer lints.
+
 ## 0.4.0
 - **Enhanced Locale Config**: Added `useFallbackTranslationsForEmptyResources`, `ignorePluralRules`, `extraAssetLoaders`, and `errorWidget` to `PlayxLocaleConfig`.
 - **Script Code Support**: Added `scriptCode` natively to `XLocale` and updated locale matching in `PlayxLocaleController` to properly utilize it.
