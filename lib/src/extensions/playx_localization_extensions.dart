@@ -50,6 +50,8 @@ extension PlayxLocalizationStringExtensions on String {
   /// [name] Name of number value. Replaces {$name} to value
   /// [format] Formats a numeric value using a [NumberFormat](https://pub.dev/documentation/intl/latest/intl/NumberFormat-class.html) class
   /// [locale] and [translate]: see [tr].
+  /// [localizeDigits] Shows the count in the digits of the locale (`٣` instead
+  /// of `3` in Arabic). Defaults to the config `localizePluralDigits`.
   String plural(
     num value, {
     BuildContext? context,
@@ -59,6 +61,7 @@ extension PlayxLocalizationStringExtensions on String {
     NumberFormat? format,
     Locale? locale,
     bool translate = true,
+    bool? localizeDigits,
   }) =>
       ez.plural(
         this,
@@ -70,6 +73,7 @@ extension PlayxLocalizationStringExtensions on String {
         context: context,
         locale: locale,
         translate: translate,
+        localizeDigits: localizeDigits,
       );
 }
 
@@ -121,6 +125,7 @@ extension TextTranslateExtension on Text {
     NumberFormat? format,
     Locale? locale,
     bool translate = true,
+    bool? localizeDigits,
   }) =>
       Text(
           ez.plural(
@@ -133,6 +138,7 @@ extension TextTranslateExtension on Text {
             format: format,
             locale: locale,
             translate: translate,
+            localizeDigits: localizeDigits,
           ),
           key: key,
           style: style,
@@ -229,6 +235,7 @@ extension BuildContextLocalizationExtension on BuildContext {
     NumberFormat? format,
     Locale? locale,
     bool translate = true,
+    bool? localizeDigits,
   }) {
     final localization = Localization.of(this);
 
@@ -245,6 +252,7 @@ extension BuildContextLocalizationExtension on BuildContext {
       format: format,
       locale: locale,
       translate: translate,
+      localizeDigits: localizeDigits,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'cli_args.dart';
+import '../easy_localization/plural_rules.dart';
 import 'key_generator.dart';
 import 'translation_files.dart';
 
@@ -60,6 +61,24 @@ List<String> _pluralGroupsWithoutOther(Map<String, dynamic> data,
   return out;
 }
 
+/// Plural groups (`{"one": ..., "other": ...}`) by key path with their forms.
+Map<String, Set<String>> _pluralGroups(Map<String, dynamic> data,
+    [String prefix = '']) {
+  final out = <String, Set<String>>{};
+  data.forEach((key, value) {
+    if (value is! Map<String, dynamic>) return;
+    final path = prefix.isEmpty ? key : '$prefix.$key';
+    if (value.isNotEmpty &&
+        value.keys.every(pluralForms.contains) &&
+        value.values.every((v) => v is String)) {
+      out[path] = value.keys.toSet();
+    } else {
+      out.addAll(_pluralGroups(value, path));
+    }
+  });
+  return out;
+}
+
 /// Compares [locales] (locale -> loaded data) against [baseLocale].
 List<ValidationIssue> validateTranslations({
   required String baseLocale,
@@ -77,6 +96,25 @@ List<ValidationIssue> validateTranslations({
       issues.add(ValidationIssue(IssueSeverity.error, locale, key,
           'plural group is missing the required "other" form'));
     }
+
+    // Forms the language needs, e.g. Arabic `few` and `many`. `zero` is
+    // optional because it falls back to `other`.
+    final language = locale.split(RegExp('[-_]')).first;
+    final needed = pluralCategoriesFor(language)
+        .map((c) => c.name.toLowerCase())
+        .toSet()
+      ..removeAll(const {'other', 'zero'});
+    _pluralGroups(data).forEach((path, forms) {
+      final missing = needed.difference(forms);
+      if (missing.isEmpty) return;
+      issues.add(ValidationIssue(
+          IssueSeverity.warning,
+          locale,
+          path,
+          'plural group has no ${(missing.toList()..sort()).join(', ')} '
+          'form, which the "$language" plural rules use '
+          '(it falls back to "other")'));
+    });
 
     for (final e in flat.entries) {
       if (e.value.trim().isEmpty) {
@@ -150,7 +188,8 @@ Usage: dart run playx_localization:validate [options]
 
 Errors: missing keys, placeholder mismatches, plural groups without "other",
 unreadable files or broken linked files.
-Warnings: extra keys, empty values, unused keys.
+Warnings: extra keys, empty values, unused keys, plural groups missing forms
+the language uses (e.g. Arabic few/many).
 ''';
 
 /// Entry point of `validate`. Returns the process exit code.

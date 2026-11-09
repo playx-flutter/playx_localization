@@ -294,6 +294,40 @@ To insert a number in the translated string, use `{}`. Number formatting support
 
 You can use extension methods of [String] or [Text] widget, you can also use `plural()` as a static function.
 
+#### Nouns with numbers (Arabic, Russian, ...)
+`plural()` follows the plural rules of the language, so a noun can change with its count. Write one entry with the forms the language needs:
+
+```json
+"vehicle": {
+  "one": "مركبة",
+  "two": "مركبتان",
+  "few": "{} مركبات",
+  "many": "{} مركبة",
+  "other": "{} مركبة"
+}
+```
+
+```dart
+'vehicle'.plural(1);   // مركبة
+'vehicle'.plural(2);   // مركبتان
+'vehicle'.plural(3);   // 3 مركبات
+'vehicle'.plural(11);  // 11 مركبة
+```
+
+Arabic uses `one` (1), `two` (2), `few` (3-10, 103-110, ...), `many` (11-99, ...) and `other` (100, 101, ...). Missing forms fall back to `other`, and `zero` is used for 0 when you define it. An exact `zero`, `one` or `two` form always wins for 0, 1 and 2 in every language.
+
+To show the count in the language's digits (`٣` instead of `3`), turn on `localizePluralDigits` once, or pass `localizeDigits` per call:
+
+```dart
+PlayxLocaleConfig(localizePluralDigits: true, ...);
+
+'vehicle'.plural(3);                         // ٣ مركبات
+'vehicle'.plural(11);                        // ١١ مركبة
+'vehicle'.plural(3, localizeDigits: false);  // 3 مركبات
+```
+
+`dart run playx_localization:validate` warns when a plural group misses a form its language uses, for example Arabic `few` and `many`. Set `ignorePluralRules: true` in the config to only use `zero`, `one`, `two` and `other`.
+
 #### Arguments:
 
 | Name      | Type                  | Description                                                                                                                  |  

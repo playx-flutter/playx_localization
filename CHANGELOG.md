@@ -12,6 +12,10 @@
 - **Note for custom `LinkedFileResolver` subclasses**: `resolveLinkedFiles` has a new optional `scriptCode` parameter.
 - **Fix**: `DateTime.toFormattedDate` / `toFormattedTime` used only the language code, so `de-AT` got `de` month names. They now use the full locale tag (still overridable with `locale`).
 - `PlayxLocalizationDelegate` is now exported, so the callback of `customLocalizationDelegateBuilder` can be typed. Added `PlayxLocalization.resetLocale`.
+- **Plurals follow the language's rules by default (nouns with numbers)**: `plural()` now picks `one`, `two`, `few`, `many` or `other` with the plural rules of the language, so Arabic (`مركبة` / `مركبتان` / `٣ مركبات` / `١١ مركبة`) and Russian work with a single entry. An exact `zero` / `one` / `two` form still wins for 0, 1 and 2, and missing forms fall back to `other`, so existing entries keep working. `ignorePluralRules` now defaults to `false`; set it to `true` to keep only `zero`, `one`, `two` and `other`.
+- **Localized digits in plurals**: New `PlayxLocaleConfig.localizePluralDigits` and `plural(localizeDigits: ...)` show the count as `٣` instead of `3` in Arabic (and other digit systems). A custom `format` still takes precedence.
+- **Fix**: Decimal counts were rounded before choosing the plural form (`1.4` was treated as singular).
+- **Validator**: warns when a plural group misses forms its language uses (for example Arabic `few` / `many`). `pluralCategoriesFor` is used for this.
 - **`translate` option**: `tr` and `plural` (String, `Text` and `BuildContext` variants) accept `translate: false` to return the text as-is, still applying `args` / `namedArgs`.
 - **`preloadLocales`**: New `PlayxLocalization.preloadLocales` loads only the locales you need so `tr(locale: ...)` works for them without enabling `preloadSupportedLocales` for all locales.
 - `tr` with a `BuildContext` now falls back to the global instance when no `Localization` is found in the context, instead of throwing.

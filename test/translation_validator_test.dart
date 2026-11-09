@@ -47,7 +47,14 @@ void main() {
         },
         'ar': {
           'home': {'title': 'ع'},
-          'item': {'zero': 'لا', 'other': '{} عناصر'},
+          'item': {
+            'zero': 'لا',
+            'one': 'عنصر',
+            'two': 'عنصران',
+            'few': '{} عناصر',
+            'many': '{} عنصرا',
+            'other': '{} عنصر',
+          },
         },
       });
       expect(issues, isEmpty);

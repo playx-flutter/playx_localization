@@ -70,9 +70,22 @@ class PlayxLocaleConfig {
   /// @Default value false
   final bool useFallbackTranslationsForEmptyResources;
 
-  /// Ignore usage of plural strings for languages that do not use plural rules.
-  /// @Default value true
+  /// Ignore the plural rules of the language.
+  ///
+  /// By default `plural` uses the rules of the language, so Arabic can have
+  /// separate `one`, `two`, `few` (3-10), `many` (11-99) and `other` forms, and
+  /// Russian `one`, `few` and `many`. An exact `zero`, `one` or `two` form
+  /// always wins for 0, 1 and 2. Missing forms fall back to `other`.
+  ///
+  /// Set it to `true` to only ever use `zero`, `one`, `two` and `other`.
+  /// @Default value false
   final bool ignorePluralRules;
+
+  /// Show the count of `plural` in the digits of the current locale, so
+  /// `{} مركبات` becomes `٣ مركبات` in Arabic instead of `3 مركبات`.
+  /// Can be overridden per call with `plural(localizeDigits: ...)`.
+  /// @Default value false
+  final bool localizePluralDigits;
 
   /// Class loader for localization files that belong to other packages.
   /// @Default value `null`
@@ -101,7 +114,8 @@ class PlayxLocaleConfig {
     this.useOnlyLangCode = false,
     this.useFallbackTranslations = true,
     this.useFallbackTranslationsForEmptyResources = false,
-    this.ignorePluralRules = true,
+    this.ignorePluralRules = false,
+    this.localizePluralDigits = false,
     this.preloadSupportedLocales = false,
     this.path = 'assets/translations',
     this.assetLoader = const RootBundleAssetLoader(

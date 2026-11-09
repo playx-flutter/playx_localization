@@ -25,6 +25,7 @@ class Localization {
 
   bool _useFallbackTranslationsForEmptyResources = false;
   bool _ignorePluralRules = false;
+  bool _localizePluralDigits = false;
 
   Localization();
 
@@ -41,7 +42,8 @@ class Localization {
     Translations? fallbackTranslations,
     Map<Locale, Translations>? preloadedTranslations,
     bool useFallbackTranslationsForEmptyResources = false,
-    bool ignorePluralRules = true,
+    bool ignorePluralRules = false,
+    bool localizePluralDigits = false,
   }) {
     instance._locale = locale;
     instance._translations = translations;
@@ -50,6 +52,7 @@ class Localization {
     instance._useFallbackTranslationsForEmptyResources =
         useFallbackTranslationsForEmptyResources;
     instance._ignorePluralRules = ignorePluralRules;
+    instance._localizePluralDigits = localizePluralDigits;
     return translations == null ? false : true;
   }
 
@@ -137,14 +140,6 @@ class Localization {
     return res;
   }
 
-  static PluralRule? _pluralRule(String? locale, num howMany) {
-    if (instance._ignorePluralRules) {
-      return () => _pluralCaseFallback(howMany);
-    }
-    startRuleEvaluation(howMany);
-    return pluralRules[locale];
-  }
-
   static PluralCase _pluralCaseFallback(num value) {
     switch (value) {
       case 0:
@@ -167,45 +162,19 @@ class Localization {
     NumberFormat? format,
     Locale? locale,
     bool translate = true,
+    bool? localizeDigits,
   }) {
+    final formattedValue = _formatPluralValue(value,
+        format: format, localizeDigits: localizeDigits, locale: locale);
+
     late String res;
-
-    if (!translate) {
-      final formattedValue = format == null ? '$value' : format.format(value);
-      if (name != null) {
-        namedArgs = {...?namedArgs, name: formattedValue};
-      }
-      return _replaceArgs(
-          _replaceNamedArgs(key, namedArgs), args ?? [formattedValue]);
+    if (translate) {
+      final languageCode = locale?.languageCode ?? _locale.languageCode;
+      res = _resolvePluralForms(key, _pluralForms(languageCode, value),
+          locale: locale);
+    } else {
+      res = key;
     }
-
-    final pLangCode = locale?.languageCode ?? _locale.languageCode;
-    final pluralRule = _pluralRule(pLangCode, value);
-    final pluralCase =
-        pluralRule != null ? pluralRule() : _pluralCaseFallback(value);
-
-    switch (pluralCase) {
-      case PluralCase.ZERO:
-        res = _resolvePlural(key, 'zero', locale: locale);
-        break;
-      case PluralCase.ONE:
-        res = _resolvePlural(key, 'one', locale: locale);
-        break;
-      case PluralCase.TWO:
-        res = _resolvePlural(key, 'two', locale: locale);
-        break;
-      case PluralCase.FEW:
-        res = _resolvePlural(key, 'few', locale: locale);
-        break;
-      case PluralCase.MANY:
-        res = _resolvePlural(key, 'many', locale: locale);
-        break;
-      case PluralCase.OTHER:
-        res = _resolvePlural(key, 'other', locale: locale);
-        break;
-    }
-
-    final formattedValue = format == null ? '$value' : format.format(value);
 
     if (name != null) {
       namedArgs = {...?namedArgs, name: formattedValue};
@@ -215,20 +184,63 @@ class Localization {
     return _replaceArgs(res, args ?? [formattedValue]);
   }
 
-  String _gender(String key, {required String gender, Locale? locale}) {
-    return _resolve('$key.$gender', locale: locale);
+  /// The count as text: with [format] if given, otherwise localized digits
+  /// (`٣` instead of `3` in Arabic) when [localizeDigits] (or the config
+  /// `localizePluralDigits`) is enabled.
+  String _formatPluralValue(
+    num value, {
+    NumberFormat? format,
+    bool? localizeDigits,
+    Locale? locale,
+  }) {
+    if (format != null) return format.format(value);
+    if (!(localizeDigits ?? _localizePluralDigits)) return '$value';
+    final target = locale ?? _locale;
+    // intl's plain `ar` uses Western digits; `ar_EG` uses Arabic-Indic digits.
+    final tag = target.languageCode == 'ar' ? 'ar_EG' : target.toLanguageTag();
+    try {
+      return NumberFormat.decimalPattern(tag).format(value);
+    } catch (_) {
+      // Unknown number symbols for this locale.
+      return '$value';
+    }
   }
 
-  String _resolvePlural(String key, String subKey, {Locale? locale}) {
-    if (subKey == 'other') return _resolve('$key.other', locale: locale);
+  /// The plural forms to try, most specific first.
+  ///
+  /// With language rules (default): an exact `zero` / `one` / `two` form for
+  /// 0, 1 and 2, then the form the language's rule picks (`few`, `many`, ...).
+  /// With `ignorePluralRules`: only the exact `zero` / `one` / `two` form.
+  /// The caller falls back to `other` when none of them exists.
+  List<String> _pluralForms(String languageCode, num value) {
+    final exact = _pluralCaseFallback(value);
+    if (_ignorePluralRules) return [exact.name.toLowerCase()];
 
-    final tag = '$key.$subKey';
-    var resource =
-        _resolve(tag, logging: false, fallback: _fallbackTranslations != null, locale: locale);
-    if (resource == tag) {
-      resource = _resolve('$key.other', locale: locale);
+    final rule = pluralRules[languageCode];
+    PluralCase language = PluralCase.OTHER;
+    if (rule != null) {
+      startRuleEvaluation(value, null);
+      language = rule();
     }
-    return resource;
+    return {exact.name.toLowerCase(), language.name.toLowerCase()}.toList();
+  }
+
+  String _resolvePluralForms(String key, List<String> forms,
+      {Locale? locale}) {
+    for (final form in forms) {
+      if (form == 'other') continue;
+      final tag = '$key.$form';
+      final resource = _resolve(tag,
+          logging: false,
+          fallback: _fallbackTranslations != null,
+          locale: locale);
+      if (resource != tag) return resource;
+    }
+    return _resolve('$key.other', locale: locale);
+  }
+
+  String _gender(String key, {required String gender, Locale? locale}) {
+    return _resolve('$key.$gender', locale: locale);
   }
 
   String _resolve(String key, {bool logging = true, bool fallback = true, Locale? locale}) {

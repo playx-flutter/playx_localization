@@ -117,6 +117,7 @@ String plural(
   NumberFormat? format,
   Locale? locale,
   bool translate = true,
+  bool? localizeDigits,
 }) {
   final Localization localization =
       (context != null ? Localization.of(context) : null) ??
@@ -127,5 +128,6 @@ String plural(
       name: name,
       format: format,
       locale: locale,
-      translate: translate);
+      translate: translate,
+      localizeDigits: localizeDigits);
 }

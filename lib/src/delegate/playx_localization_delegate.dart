@@ -41,6 +41,8 @@ class PlayxLocalizationDelegate extends LocalizationsDelegate<Localization> {
       useFallbackTranslationsForEmptyResources: localizationController!
           .config.useFallbackTranslationsForEmptyResources,
       ignorePluralRules: localizationController!.config.ignorePluralRules,
+      localizePluralDigits:
+          localizationController!.config.localizePluralDigits,
     );
 
     return Future.value(Localization.instance);

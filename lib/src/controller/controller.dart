@@ -158,6 +158,7 @@ class PlayxLocaleController extends ValueNotifier<XLocale?> {
       useFallbackTranslationsForEmptyResources:
           config.useFallbackTranslationsForEmptyResources,
       ignorePluralRules: config.ignorePluralRules,
+      localizePluralDigits: config.localizePluralDigits,
     );
   }
 
