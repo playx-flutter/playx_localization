@@ -4,7 +4,6 @@ import 'package:playx_localization_example/translation/app_trans.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await PlayxCore.bootCore();
 
   const locales = [
     XLocale(id: 'en', name: 'English', languageCode: 'en'),
