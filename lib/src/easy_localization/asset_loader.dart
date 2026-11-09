@@ -52,21 +52,40 @@ class RootBundleAssetLoader extends AssetLoader {
     );
   }
 
+  /// `base/language[-script][-country].json`, e.g. `assets/zh-Hant-TW.json`.
   String getLocalePath(String basePath, Locale locale) {
     return '$basePath/${locale.toStringWithSeparator(separator: "-")}.json';
   }
 
+  /// File name used before 0.5.0, `base/language[-country][-script].json`
+  /// (e.g. `assets/zh-TW-Hant.json`).
+  String getLegacyLocalePath(String basePath, Locale locale) {
+    return '$basePath/${locale.toLegacyStringWithSeparator(separator: "-")}.json';
+  }
+
   @override
   Future<Map<String, dynamic>?> load(String path, Locale locale) async {
-    var localePath = getLocalePath(path, locale);
+    final localePath = getLocalePath(path, locale);
+    final legacyPath = getLegacyLocalePath(path, locale);
     PlayxLocaleController.logger?.debug('Load asset from $path');
 
-    Map<String, dynamic> baseJson =
-        json.decode(await fileLoader.loadString(localePath));
+    String content;
+    try {
+      content = await fileLoader.loadString(localePath);
+    } catch (_) {
+      // Keep assets named in the old `zh-TW-Hant` order working.
+      if (legacyPath == localePath) rethrow;
+      content = await fileLoader.loadString(legacyPath);
+      PlayxLocaleController.logger?.warning(
+          'Loaded $legacyPath. Rename it to $localePath, the old name order will be removed in a future version.');
+    }
+
+    Map<String, dynamic> baseJson = json.decode(content);
     return await linkedFileResolver.resolveLinkedFiles(
       basePath: path,
       languageCode: locale.languageCode,
       countryCode: locale.countryCode,
+      scriptCode: locale.scriptCode,
       baseJson: baseJson,
     );
   }

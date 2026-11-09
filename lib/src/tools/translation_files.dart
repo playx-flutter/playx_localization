@@ -18,9 +18,11 @@ class TranslationFile {
   final String locale;
   final String path;
   final String languageCode;
+  final String? scriptCode;
   final String? countryCode;
 
-  TranslationFile._(this.locale, this.path, this.languageCode, this.countryCode);
+  TranslationFile._(this.locale, this.path, this.languageCode, this.scriptCode,
+      this.countryCode);
 
   factory TranslationFile.fromPath(String path) {
     final name = path.split(Platform.pathSeparator).last;
@@ -28,12 +30,26 @@ class TranslationFile {
         ? name.substring(0, name.length - '.json'.length)
         : name;
     final parts = locale.split(RegExp('[-_]'));
-    return TranslationFile._(
-      locale,
-      path,
-      parts.first,
-      parts.length > 1 ? parts.last : null,
-    );
+    String? script;
+    String? country;
+    if (parts.length == 2) {
+      // `zh-Hant` (script) or `en-US` (country).
+      if (parts[1].length == 4) {
+        script = parts[1];
+      } else {
+        country = parts[1];
+      }
+    } else if (parts.length > 2) {
+      // `zh-Hant-TW`, or the legacy order `zh-TW-Hant`.
+      if (parts[1].length == 4) {
+        script = parts[1];
+        country = parts[2];
+      } else {
+        country = parts[1];
+        script = parts[2];
+      }
+    }
+    return TranslationFile._(locale, path, parts.first, script, country);
   }
 
   String get directory {
@@ -52,6 +68,7 @@ class TranslationFile {
       basePath: directory,
       languageCode: languageCode,
       countryCode: countryCode,
+      scriptCode: scriptCode,
       baseJson: decoded,
     );
   }

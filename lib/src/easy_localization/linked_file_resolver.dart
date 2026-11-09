@@ -18,17 +18,29 @@ abstract class LinkedFileResolver {
     Set<String>? visited,
     int depth = 0,
     String? countryCode,
+    String? scriptCode,
   });
 
+  /// Path of a linked file inside the folder of the locale:
+  /// `base/language[-script][-country]/file`.
   String getLinkedLocalePath(
       String basePath, String filePath, String languageCode,
-      {String? countryCode}) {
-    if (countryCode != null) {
-      return '$basePath/$languageCode-$countryCode/$filePath';
-    }
-
-    return '$basePath/$languageCode/$filePath';
+      {String? countryCode, String? scriptCode}) {
+    final folder = [
+      languageCode,
+      if (scriptCode != null && scriptCode.isNotEmpty) scriptCode,
+      if (countryCode != null && countryCode.isNotEmpty) countryCode,
+    ].join('-');
+    return '$basePath/$folder/$filePath';
   }
+
+  /// Path used before 0.5.0, which ignored the script code
+  /// (`base/language[-country]/file`). Only differs when [scriptCode] is set.
+  String getLegacyLinkedLocalePath(
+          String basePath, String filePath, String languageCode,
+          {String? countryCode}) =>
+      getLinkedLocalePath(basePath, filePath, languageCode,
+          countryCode: countryCode);
 }
 
 class JsonLinkedFileResolver extends LinkedFileResolver {
@@ -42,6 +54,7 @@ class JsonLinkedFileResolver extends LinkedFileResolver {
     Set<String>? visited,
     int depth = 0,
     String? countryCode,
+    String? scriptCode,
   }) async {
     visited ??= <String>{};
 
@@ -60,6 +73,10 @@ class JsonLinkedFileResolver extends LinkedFileResolver {
         final rawPath = value.substring(2).trim();
         final linkedAssetPath = getLinkedLocalePath(
             basePath, rawPath, languageCode,
+            countryCode: countryCode, scriptCode: scriptCode);
+        // Folders of locales with a script code used to ignore the script.
+        final legacyAssetPath = getLegacyLinkedLocalePath(
+            basePath, rawPath, languageCode,
             countryCode: countryCode);
 
         if (visited.contains(linkedAssetPath)) {
@@ -68,7 +85,13 @@ class JsonLinkedFileResolver extends LinkedFileResolver {
         }
 
         try {
-          final linkedContent = await fileLoader.loadString(linkedAssetPath);
+          String linkedContent;
+          try {
+            linkedContent = await fileLoader.loadString(linkedAssetPath);
+          } catch (_) {
+            if (legacyAssetPath == linkedAssetPath) rethrow;
+            linkedContent = await fileLoader.loadString(legacyAssetPath);
+          }
           final Map<String, dynamic> linkedJson =
               json.decode(linkedContent) as Map<String, dynamic>;
 
@@ -81,6 +104,7 @@ class JsonLinkedFileResolver extends LinkedFileResolver {
             visited: {...visited, linkedAssetPath},
             depth: depth + 1,
             countryCode: countryCode,
+            scriptCode: scriptCode,
           );
           fullJson[key] = resolved;
         } catch (e) {
@@ -96,6 +120,7 @@ class JsonLinkedFileResolver extends LinkedFileResolver {
           visited: visited,
           depth: depth,
           countryCode: countryCode,
+          scriptCode: scriptCode,
         );
       }
     }
